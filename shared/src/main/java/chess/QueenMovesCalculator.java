@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class BishopMovesCalculator extends PieceMovesCalculator {
-    int[][] directions = {{1,1},{1,-1},{-1,1},{-1,-1}};
-    // possible moves
+public class QueenMovesCalculator extends PieceMovesCalculator{
+    int[][] directions = {{1,1},{1,-1},{-1,1},{-1,-1},{0,1},{0,-1},{-1,0},{1,0}};
     @Override
     protected Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         List<ChessMove> positions = new ArrayList<>();
@@ -35,3 +34,4 @@ public class BishopMovesCalculator extends PieceMovesCalculator {
         return positions;
     }
 }
+

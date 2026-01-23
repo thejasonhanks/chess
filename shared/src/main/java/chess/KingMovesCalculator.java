@@ -4,18 +4,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class BishopMovesCalculator extends PieceMovesCalculator {
-    int[][] directions = {{1,1},{1,-1},{-1,1},{-1,-1}};
+public class KingMovesCalculator extends PieceMovesCalculator {
+    int[][] directions = {{-1, -1}, {0,-1}, {0, 1}, {1,-1}, {1, 0}, {1,1}, {-1, 1}, {-1, 0}};
     // possible moves
     @Override
     protected Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         List<ChessMove> positions = new ArrayList<>();
         int cx = myPosition.getRow();
         int cy = myPosition.getColumn();
-        for (int[] d : directions){
+        for (int[] d : directions) {
             int x = cx + d[0];
             int y = cy + d[1];
-            while (inBounds(x,y)){
+            if (inBounds(x,y)) {
                 ChessPosition newPosition = new ChessPosition(x, y);
                 if (board.getPiece(newPosition) == null) {
                     // empty space
@@ -26,10 +26,7 @@ public class BishopMovesCalculator extends PieceMovesCalculator {
                         positions.add(new ChessMove(myPosition, newPosition, null));
                     }
                     // white piece
-                    break;
                 }
-                x += d[0];
-                y += d[1];
             }
         }
         return positions;

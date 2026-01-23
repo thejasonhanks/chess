@@ -3,23 +3,14 @@ package chess;
 import java.util.Collection;
 
 public abstract class PieceMovesCalculator {
-    private ChessBoard board;
-    private ChessPosition myPosition;
+
     protected abstract Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition);
 
-    public ChessBoard getBoard() {
-        return board;
+    protected boolean inBounds(int x, int y){
+        return x > 0 && x <= 8 && y > 0 && y <= 8;
     }
 
-    public void setBoard(ChessBoard board) {
-        this.board = board;
-    }
-
-    public ChessPosition getMyPosition() {
-        return myPosition;
-    }
-
-    public void setMyPosition(ChessPosition myPosition) {
-        this.myPosition = myPosition;
+    protected boolean checkEnemy(ChessBoard board, ChessPosition newPosition, ChessPosition myPosition){
+        return board.getPiece(newPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor();
     }
 }
