@@ -42,42 +42,42 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-        for (int row = 0; row < 8; row++){
-            for (int col = 0; col<8; col++){
-                if (row == 1){
+        for (int row = 1; row <= 8; row++){
+            for (int col = 1; col<=8; col++){
+                if (row == 2){
                     addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN));
                 }
-                else if (row == 6){
+                else if (row == 7){
                     addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN));
                 }
-                else if (row == 0) {
-                    if (col == 0 | col == 7) {
+                else if (row == 1) {
+                    if (col == 1 | col == 8) {
                         addPiece(new ChessPosition(row, col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK));
                     }
-                    else if (col == 1 | col == 6){
+                    else if (col == 2 | col == 7){
                         addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT));
                     }
-                    else if (col == 2 | col == 5){
+                    else if (col == 3 | col == 6){
                         addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP));
                     }
-                    else if (col == 3){
+                    else if (col == 4){
                         addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.QUEEN));
                     }
                     else{
                         addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KING));
                     }
                 }
-                else if (row == 7){
-                    if (col == 0 | col == 7) {
+                else if (row == 8){
+                    if (col == 1 | col == 8) {
                         addPiece(new ChessPosition(row, col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK));
                     }
-                    else if (col == 1 | col == 6){
+                    else if (col == 2 | col == 7){
                         addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT));
                     }
-                    else if (col == 2 | col == 5){
+                    else if (col == 3 | col == 6){
                         addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP));
                     }
-                    else if (col == 3){
+                    else if (col == 4){
                         addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.QUEEN));
                     }
                     else{
@@ -85,7 +85,7 @@ public class ChessBoard {
                     }
                 }
                 else{
-                    checkers[row][col] = null;
+                    checkers[row-1][col-1] = null;
                 }
             }
         }
