@@ -3,6 +3,8 @@ package chess;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static chess.ChessPiece.PieceType.BISHOP;
+
 /**
  * A chessboard that can hold and rearrange chess pieces.
  * <p>
@@ -40,7 +42,53 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-        throw new RuntimeException("Not implemented");
+        for (int row = 0; row < 8; row++){
+            for (int col = 0; col<8; col++){
+                if (row == 1){
+                    addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN));
+                }
+                else if (row == 6){
+                    addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN));
+                }
+                else if (row == 0) {
+                    if (col == 0 | col == 7) {
+                        addPiece(new ChessPosition(row, col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK));
+                    }
+                    else if (col == 1 | col == 6){
+                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT));
+                    }
+                    else if (col == 2 | col == 5){
+                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP));
+                    }
+                    else if (col == 3){
+                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.QUEEN));
+                    }
+                    else{
+                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KING));
+                    }
+                }
+                else if (row == 7){
+                    if (col == 0 | col == 7) {
+                        addPiece(new ChessPosition(row, col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK));
+                    }
+                    else if (col == 1 | col == 6){
+                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT));
+                    }
+                    else if (col == 2 | col == 5){
+                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP));
+                    }
+                    else if (col == 3){
+                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.QUEEN));
+                    }
+                    else{
+                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KING));
+                    }
+                }
+                else{
+                    checkers[row][col] = null;
+                }
+            }
+        }
     }
 
     @Override
