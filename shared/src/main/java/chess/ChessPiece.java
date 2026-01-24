@@ -2,6 +2,7 @@ package chess;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a single chess piece
@@ -54,9 +55,54 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessPiece piece = board.getPiece(myPosition);
+
         if (piece.getPieceType() == PieceType.BISHOP) {
-            return List.of(new ChessMove(new ChessPosition(5,4), new ChessPosition(1, 8), null));
+            BishopMovesCalculator BMC = new BishopMovesCalculator();
+            return BMC.pieceMoves(board, myPosition);
+        }
+
+        else if (piece.getPieceType() == PieceType.KING) {
+            KingMovesCalculator KMC = new KingMovesCalculator();
+            return KMC.pieceMoves(board, myPosition);
+
+        } else if (piece.getPieceType() == PieceType.KNIGHT) {
+            KnightMovesCalculator NMC = new KnightMovesCalculator();
+            return NMC.pieceMoves(board, myPosition);
+
+        } else if (piece.getPieceType() == PieceType.PAWN) {
+            PawnMovesCalculator PMC = new PawnMovesCalculator();
+            return PMC.pieceMoves(board, myPosition);
+
+        } else if (piece.getPieceType() == PieceType.QUEEN) {
+            QueenMovesCalculator QMC = new QueenMovesCalculator();
+            return QMC.pieceMoves(board, myPosition);
+
+        } else if (piece.getPieceType() == PieceType.ROOK) {
+            RookMovesCalculator RMC = new RookMovesCalculator();
+            return RMC.pieceMoves(board, myPosition);
         }
         return List.of();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ChessPiece that = (ChessPiece) o;
+        return pieceColor == that.pieceColor && type == that.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pieceColor, type);
+    }
+
+    @Override
+    public String toString() {
+        return "ChessPiece{" +
+                "pieceColor=" + pieceColor +
+                ", type=" + type +
+                '}';
     }
 }

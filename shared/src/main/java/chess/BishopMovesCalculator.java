@@ -10,13 +10,13 @@ public class BishopMovesCalculator extends PieceMovesCalculator {
     @Override
     protected Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         List<ChessMove> positions = new ArrayList<>();
-        int cx = myPosition.getRow();
-        int cy = myPosition.getColumn();
+        int cRow = myPosition.getRow();
+        int cCol = myPosition.getColumn();
         for (int[] d : directions){
-            int x = cx + d[0];
-            int y = cy + d[1];
-            while (inBounds(x,y)){
-                ChessPosition newPosition = new ChessPosition(x, y);
+            int nRow = cRow + d[0];
+            int nCol = cCol + d[1];
+            while (inBounds(nRow, nCol)){
+                ChessPosition newPosition = new ChessPosition(nRow, nCol);
                 if (board.getPiece(newPosition) == null) {
                     // empty space
                     positions.add(new ChessMove(myPosition, newPosition, null));
@@ -28,8 +28,8 @@ public class BishopMovesCalculator extends PieceMovesCalculator {
                     // white piece
                     break;
                 }
-                x += d[0];
-                y += d[1];
+                nRow += d[0];
+                nCol += d[1];
             }
         }
         return positions;
