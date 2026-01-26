@@ -3,7 +3,9 @@ package chess;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static chess.ChessPiece.PieceType.BISHOP;
+import static chess.ChessGame.TeamColor.BLACK;
+import static chess.ChessGame.TeamColor.WHITE;
+import static chess.ChessPiece.PieceType.*;
 
 /**
  * A chessboard that can hold and rearrange chess pieces.
@@ -14,7 +16,7 @@ import static chess.ChessPiece.PieceType.BISHOP;
 public class ChessBoard {
     ChessPiece[][] checkers = new ChessPiece[8][8];
     public ChessBoard() {
-        
+
     }
 
     /**
@@ -41,53 +43,21 @@ public class ChessBoard {
      * Sets the board to the default starting board
      * (How the game of chess normally starts)
      */
+    public void placeBackRank(int row, ChessGame.TeamColor color){
+        ChessPiece.PieceType[] backRank = {
+                ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK
+        };
+
+        for (int col = 1; col <= 8; col++){
+            addPiece(new ChessPosition(row, col), new ChessPiece(color, backRank[col-1]));
+        }
+    }
     public void resetBoard() {
-        for (int row = 1; row <= 8; row++){
-            for (int col = 1; col<=8; col++){
-                if (row == 2){
-                    addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN));
-                }
-                else if (row == 7){
-                    addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN));
-                }
-                else if (row == 1) {
-                    if (col == 1 | col == 8) {
-                        addPiece(new ChessPosition(row, col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK));
-                    }
-                    else if (col == 2 | col == 7){
-                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT));
-                    }
-                    else if (col == 3 | col == 6){
-                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP));
-                    }
-                    else if (col == 4){
-                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.QUEEN));
-                    }
-                    else{
-                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KING));
-                    }
-                }
-                else if (row == 8){
-                    if (col == 1 | col == 8) {
-                        addPiece(new ChessPosition(row, col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK));
-                    }
-                    else if (col == 2 | col == 7){
-                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT));
-                    }
-                    else if (col == 3 | col == 6){
-                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP));
-                    }
-                    else if (col == 4){
-                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.QUEEN));
-                    }
-                    else{
-                        addPiece(new ChessPosition(row,col), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KING));
-                    }
-                }
-                else{
-                    checkers[row-1][col-1] = null;
-                }
-            }
+        placeBackRank(1, WHITE);
+        placeBackRank(8, BLACK);
+        for (int col = 1; col<=8; col++){
+            addPiece(new ChessPosition(2,col), new ChessPiece(WHITE, PAWN));
+            addPiece(new ChessPosition(7,col), new ChessPiece(BLACK, PAWN));
         }
     }
 
@@ -105,3 +75,4 @@ public class ChessBoard {
         return Arrays.deepHashCode(checkers);
     }
 }
+
