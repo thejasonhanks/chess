@@ -175,8 +175,12 @@ public class ChessGame {
      * @param board the new board to use
      */
     public void setBoard(ChessBoard board) {
-        for (square in board){
-            set new board = old board;
+        ChessBoard newBoard = new ChessBoard();
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition position = new ChessPosition(row, col);
+                newBoard.addPiece(position, board.getPiece(position));
+            }
         }
     }
 
