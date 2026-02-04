@@ -3,6 +3,7 @@ package chess;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -99,12 +100,31 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        king = board.getpiece(position) == king
-        for piece in other color:
-            if validmoves includes king.position{
-                return true;
+        TeamColor enemyTeamColor;
+        if (teamColor == TeamColor.WHITE) {
+            enemyTeamColor = TeamColor.BLACK;
+        } else {
+            enemyTeamColor = TeamColor.WHITE;
         }
-            else return false;
+        ChessPosition king_pos = null;
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition position = new ChessPosition(row, col);
+                ChessPiece p = board.getPiece(position);
+                if (p.getTeamColor() == teamColor && p.getPieceType() == ChessPiece.PieceType.KING) {
+                    king_pos = position;
+                }
+                if (p.getTeamColor() == enemyTeamColor) {
+                    Collection<ChessMove> moves = validMoves(position);
+                    for (ChessMove m : moves) {
+                        if (m.getEndPosition() == king_pos) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -158,5 +178,17 @@ public class ChessGame {
         return board;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ChessGame chessGame = (ChessGame) o;
+        return turn == chessGame.turn && Objects.equals(board, chessGame.board);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(turn, board);
+    }
 }
