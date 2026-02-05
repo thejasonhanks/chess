@@ -76,10 +76,16 @@ public class ChessGame {
     public void makeMove(ChessMove move) throws InvalidMoveException {
         ChessPosition start = move.getStartPosition();
         ChessPosition end = move.getEndPosition();
-        if (board.getPiece(start) != null && board.getPiece(start).getTeamColor() == turn){
+        ChessPiece movingPiece = board.getPiece(start);
+        if (movingPiece != null && movingPiece.getTeamColor() == turn){
             if (validMoves(start).contains(move)){
-                board.addPiece(end, board.getPiece(start));
-                board.addPiece(start, null);
+                if (movingPiece.getPieceType() != ChessPiece.PieceType.PAWN || (movingPiece.getPieceType() == ChessPiece.PieceType.PAWN && move.getPromotionPiece() == null)) {
+                    board.addPiece(end, movingPiece);
+                    board.addPiece(start, null);
+                }else{
+                    board.addPiece(end, new ChessPiece(movingPiece.getTeamColor(), move.getPromotionPiece()));
+                    board.addPiece(start, null);
+                }
             }else{
                 throw new InvalidMoveException("Invalid move");
             }
