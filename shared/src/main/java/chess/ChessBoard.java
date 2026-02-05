@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -37,6 +38,16 @@ public class ChessBoard {
      */
     public ChessPiece getPiece(ChessPosition position) {
         return checkers[position.getRow()-1][position.getColumn()-1];
+    }
+
+    public Iterable<ChessPosition> allPositions() {
+        var positions = new ArrayList<ChessPosition>();
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                positions.add(new ChessPosition(row, col));
+            }
+        }
+        return positions;
     }
 
     /**
