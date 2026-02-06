@@ -15,11 +15,16 @@ import static chess.ChessPiece.PieceType.*;
  * signature of the existing methods.
  */
 public class ChessBoard {
-    ChessPiece[][] checkers = new ChessPiece[8][8];
+    ChessPiece[][] board = new ChessPiece[8][8];
     public ChessBoard() {
 
     }
-
+    public ChessBoard(ChessBoard other) {
+        this.board = new ChessPiece[8][8];
+        for (int row = 0; row <= 7; row++) {
+            System.arraycopy(other.board[row], 0, this.board[row], 0, 8);
+        }
+    }
     /**
      * Adds a chess piece to the chessboard
      *
@@ -27,7 +32,7 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        checkers[position.getRow()-1][position.getColumn()-1] = piece;
+        board[position.getRow()-1][position.getColumn()-1] = piece;
     }
     /**
      * Gets a chess piece on the chessboard
@@ -37,7 +42,7 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-        return checkers[position.getRow()-1][position.getColumn()-1];
+        return board[position.getRow()-1][position.getColumn()-1];
     }
 
     public Iterable<ChessPosition> allPositions() {
@@ -78,12 +83,12 @@ public class ChessBoard {
             return false;
         }
         ChessBoard that = (ChessBoard) o;
-        return Objects.deepEquals(checkers, that.checkers);
+        return Objects.deepEquals(board, that.board);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.deepHashCode(checkers);
+        return Arrays.deepHashCode(board);
     }
 }
 

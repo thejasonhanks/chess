@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import static chess.ChessPiece.PieceType.PAWN;
+
 /**
  * For a class that can manage a chess game, making moves on a board
  * <p>
@@ -54,12 +56,17 @@ public class ChessGame {
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         List<ChessMove> valid = new ArrayList<>();
         ChessPiece piece = board.getPiece(startPosition);
+
         if (piece == null) {
             return null;
         } else {
             Collection<ChessMove> allMoves = piece.pieceMoves(board, startPosition);
             for (ChessMove m : allMoves) {
-                if (!isInCheck(getTeamTurn())) {
+                ChessBoard testBoard = new ChessBoard(board);
+                testBoard.addPiece(m.getEndPosition(), piece);
+                testBoard.addPiece(startPosition, null);
+
+                if (!isInCheckCheck(piece.getTeamColor(), testBoard)) {
                     valid.add(m);
                 }
             }
@@ -77,9 +84,10 @@ public class ChessGame {
         ChessPosition start = move.getStartPosition();
         ChessPosition end = move.getEndPosition();
         ChessPiece movingPiece = board.getPiece(start);
+
         if (movingPiece != null && movingPiece.getTeamColor() == turn){
             if (validMoves(start).contains(move)){
-                if (movingPiece.getPieceType() != ChessPiece.PieceType.PAWN || (movingPiece.getPieceType() == ChessPiece.PieceType.PAWN && move.getPromotionPiece() == null)) {
+                if (movingPiece.getPieceType() != PAWN || (movingPiece.getPieceType() == PAWN && move.getPromotionPiece() == null)) {
                     board.addPiece(end, movingPiece);
                     board.addPiece(start, null);
                 }else{
@@ -106,7 +114,7 @@ public class ChessGame {
      * @param teamColor which team to check for check
      * @return True if the specified team is in check
      */
-    public boolean isInCheck(TeamColor teamColor) {
+    public boolean isInCheckCheck(TeamColor teamColor, ChessBoard board){
         TeamColor enemyTeamColor;
         if (teamColor == TeamColor.WHITE) {
             enemyTeamColor = TeamColor.BLACK;
@@ -134,6 +142,10 @@ public class ChessGame {
             }
         }
         return false;
+    }
+
+    public boolean isInCheck(TeamColor teamColor) {
+        return isInCheckCheck(teamColor, this.board);
     }
 
     /**
