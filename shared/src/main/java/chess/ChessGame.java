@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static chess.ChessPiece.PieceType.PAWN;
+import static java.lang.Math.abs;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -16,6 +17,7 @@ import static chess.ChessPiece.PieceType.PAWN;
 public class ChessGame {
     public TeamColor turn;
     public ChessBoard board;
+    //private static ChessPosition enPassantTarget;
     public ChessGame() {
         setTeamTurn(TeamColor.WHITE);
         board = new ChessBoard();
@@ -87,10 +89,21 @@ public class ChessGame {
 
         if (movingPiece != null && movingPiece.getTeamColor() == turn){
             if (validMoves(start).contains(move)){
-                if (movingPiece.getPieceType() != PAWN || (movingPiece.getPieceType() == PAWN && move.getPromotionPiece() == null)) {
+                if (movingPiece.getPieceType() != PAWN) {
                     board.addPiece(end, movingPiece);
                     board.addPiece(start, null);
-                }else{
+//               else if (abs(end.getRow() - start.getRow()) > 1) {
+//                    board.addPiece(end, movingPiece);
+//                    board.addPiece(start, null);
+//                    if (movingPiece.getTeamColor() == TeamColor.WHITE){
+//                        enPassantTarget = new ChessPosition(end.getRow() - 1, end.getColumn());
+//                    } else{
+//                        enPassantTarget = new ChessPosition(end.getRow() + 1, end.getColumn());
+//                    }
+                } else if (move.getPromotionPiece() == null) {
+                    board.addPiece(end, movingPiece);
+                    board.addPiece(start, null);
+                } else{
                     board.addPiece(end, new ChessPiece(movingPiece.getTeamColor(), move.getPromotionPiece()));
                     board.addPiece(start, null);
                 }
@@ -106,6 +119,7 @@ public class ChessGame {
         }else{
             setTeamTurn(TeamColor.BLACK);
         }
+
     }
 
     /**
@@ -159,7 +173,7 @@ public class ChessGame {
         else {
             for (ChessPosition pos : board.allPositions()) {
                 ChessPiece p = board.getPiece(pos);
-                if (p != null && p.getTeamColor() == teamColor && validMoves(pos) != null) {
+                if (p != null && p.getTeamColor() == teamColor && !validMoves(pos).isEmpty()) {
                         return false;
                 }
             }
@@ -175,11 +189,12 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
+        if (isInCheck(teamColor)) return false;
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition position = new ChessPosition(row, col);
                 ChessPiece p = board.getPiece(position);
-                if (p != null && p.getTeamColor() == teamColor && validMoves(position) != null) {
+                if (p != null && p.getTeamColor() == teamColor && !validMoves(position).isEmpty()) {
                     return false;
                 }
             }
@@ -211,6 +226,10 @@ public class ChessGame {
     public ChessBoard getBoard() {
         return board;
     }
+
+//    public static ChessPosition getEnPassantTarget() {
+//        return enPassantTarget;
+//    }
 
     @Override
     public boolean equals(Object o) {

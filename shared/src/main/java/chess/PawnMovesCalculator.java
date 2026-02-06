@@ -66,7 +66,7 @@ public class PawnMovesCalculator extends PieceMovesCalculator {
                 }
                 if (i == 3 && board.getPiece(newPosition) != null && checkEnemy(board, newPosition, myPosition)) {
                     // right capture
-                    if ((color == WHITE && nRow == 8) | (color == BLACK && nRow == 1)){
+                    if ((color == WHITE && nRow == 8) || (color == BLACK && nRow == 1)){
                         positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, BISHOP).getPieceType()));
                         positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, ROOK).getPieceType()));
                         positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, KNIGHT).getPieceType()));
