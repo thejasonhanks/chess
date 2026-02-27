@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static chess.ChessPiece.PieceType.PAWN;
-import static java.lang.Math.abs;
+//import static java.lang.Math.abs;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -100,10 +100,10 @@ public class ChessGame {
 //                    } else{
 //                        enPassantTarget = new ChessPosition(end.getRow() + 1, end.getColumn());
 //                    }
-                } else if (move.getPromotionPiece() == null) {
+                }else if (move.getPromotionPiece() == null) {
                     board.addPiece(end, movingPiece);
                     board.addPiece(start, null);
-                } else{
+                }else{
                     board.addPiece(end, new ChessPiece(movingPiece.getTeamColor(), move.getPromotionPiece()));
                     board.addPiece(start, null);
                 }
@@ -132,7 +132,7 @@ public class ChessGame {
         TeamColor enemyTeamColor;
         if (teamColor == TeamColor.WHITE) {
             enemyTeamColor = TeamColor.BLACK;
-        } else {
+        }else{
             enemyTeamColor = TeamColor.WHITE;
         }
         ChessPosition king_pos = null;

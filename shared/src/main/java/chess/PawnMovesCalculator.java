@@ -31,53 +31,47 @@ public class PawnMovesCalculator extends PieceMovesCalculator {
             }
             if (inBounds(nRow, nCol)) {
                 ChessPosition newPosition = new ChessPosition(nRow, nCol);
-                if (board.getPiece(newPosition) == null && i == 0) {
-                    // empty space
-                    if ((color == WHITE && nRow == 8) | (color == BLACK && nRow == 1)){
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, BISHOP).getPieceType()));
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, ROOK).getPieceType()));
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, KNIGHT).getPieceType()));
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, QUEEN).getPieceType()));
-                    }else {
-                        positions.add(new ChessMove(myPosition, newPosition, null));
+
+                // empty space
+                if (board.getPiece(newPosition) == null && i == 0)
+                    addMove(positions, color, nRow, myPosition, newPosition);
+
+                //starting position
+                if (i == 1 && board.getPiece(newPosition) == null) {
+                    if ((color == WHITE && cRow == 2 && board.getPiece(new ChessPosition(nRow - 1, nCol)) == null) ||
+                        (color == BLACK && cRow == 7 && board.getPiece(new ChessPosition(nRow + 1, nCol)) == null)) {
+                        addMove(positions, color, nRow, myPosition, newPosition);
                     }
                 }
-                if ((color == WHITE && cRow == 2 && i == 1 && board.getPiece(newPosition) == null && board.getPiece(new ChessPosition(nRow-1, nCol)) == null) | (color == BLACK && cRow == 7 && i == 1 && board.getPiece(newPosition) == null && board.getPiece(new ChessPosition(nRow+1, nCol)) == null)) {
-                    //starting position
-                    if ((color == WHITE && nRow == 8) | (color == BLACK && nRow == 1)){
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, BISHOP).getPieceType()));
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, ROOK).getPieceType()));
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, KNIGHT).getPieceType()));
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, QUEEN).getPieceType()));
-                    }else {
-                        positions.add(new ChessMove(myPosition, newPosition, null));
-                    }
-                }
-                if (i == 2 && board.getPiece(newPosition) != null && checkEnemy(board, newPosition, myPosition)) {
-                    // left capture
-                    if ((color == WHITE && nRow == 8) | (color == BLACK && nRow == 1)){
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, BISHOP).getPieceType()));
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, ROOK).getPieceType()));
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, KNIGHT).getPieceType()));
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, QUEEN).getPieceType()));
-                    }else {
-                        positions.add(new ChessMove(myPosition, newPosition, null));
-                    }
-                }
-                if (i == 3 && board.getPiece(newPosition) != null && checkEnemy(board, newPosition, myPosition)) {
-                    // right capture
-                    if ((color == WHITE && nRow == 8) || (color == BLACK && nRow == 1)){
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, BISHOP).getPieceType()));
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, ROOK).getPieceType()));
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, KNIGHT).getPieceType()));
-                        positions.add(new ChessMove(myPosition, newPosition, new ChessPiece(color, QUEEN).getPieceType()));
-                    }else {
-                        positions.add(new ChessMove(myPosition, newPosition, null));
-                    }
-                }
+
+                // left capture
+                if (i == 2 && board.getPiece(newPosition) != null && checkEnemy(board, newPosition, myPosition))
+                    addMove(positions, color, nRow, myPosition, newPosition);
+
+                // right capture
+                if (i == 3 && board.getPiece(newPosition) != null && checkEnemy(board, newPosition, myPosition))
+                    addMove(positions, color, nRow, myPosition, newPosition);
             }
             i++;
         }
     return positions;
+    }
+
+    void addMove(Collection<ChessMove> positions, ChessGame.TeamColor color,
+                 int row, ChessPosition myPosition, ChessPosition newPosition){
+        if ((color == WHITE && row == 8) || (color == BLACK && row == 1)){
+            addPromotionMove(positions, myPosition, newPosition, color);
+        }else {
+            positions.add(new ChessMove(myPosition, newPosition, null));
+        }
+    }
+
+    void addPromotionMove(Collection<ChessMove> positions, ChessPosition myPosition,
+                          ChessPosition newPosition, ChessGame.TeamColor color){
+        ChessPiece.PieceType[] promotionTypes = {QUEEN, ROOK, BISHOP, KNIGHT};
+        for (ChessPiece.PieceType type : promotionTypes) {
+            ChessPiece promoPiece = new ChessPiece(color, type);
+            positions.add(new ChessMove(myPosition, newPosition, promoPiece.getPieceType()));
+        }
     }
 }
