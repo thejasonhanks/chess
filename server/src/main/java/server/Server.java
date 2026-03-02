@@ -22,7 +22,7 @@ public class Server {
         UserHandler userHandler = new UserHandler(userDAO, authDAO);
         GameHandler gameHandler = new GameHandler(gameDAO, authDAO);
         SessionHandler sessionHandler = new SessionHandler(userDAO, authDAO);
-        ClearHandler clearHandler = new ClearHandler();
+        ClearHandler clearHandler = new ClearHandler(userDAO, authDAO, gameDAO);
 
         javalin.post("/user", userHandler::register);
 
