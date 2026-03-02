@@ -75,6 +75,9 @@ public class GameHandler {
         } catch (UnauthorizedException e) {
             ctx.status(401);
             ctx.json(Map.of("message", "Error: " + e.getMessage()));
+        } catch (AlreadyTakenException e){
+            ctx.status(403);
+            ctx.json(Map.of("message", "Error: " + e.getMessage()));
         } catch (Exception e) {
             ctx.status(500);
             ctx.json(Map.of("message", "Error: " + e.getMessage()));

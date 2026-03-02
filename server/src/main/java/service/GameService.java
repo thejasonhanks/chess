@@ -1,6 +1,7 @@
 package service;
 
 import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import model.AuthData;
 import model.GameData;
@@ -17,7 +18,7 @@ public class GameService {
         this.authDAO = authDAO;
     }
 
-    public ListResult listGames(String authToken){
+    public ListResult listGames(String authToken) throws Exception {
         AuthData auth = authDAO.getAuth(authToken);
         if (auth == null){
             throw new UnauthorizedException("unauthorized");
@@ -26,7 +27,7 @@ public class GameService {
         return new ListResult(games);
     }
 
-    public CreateResult createGame(String authToken, CreateRequest request){
+    public CreateResult createGame(String authToken, CreateRequest request) throws Exception {
         if (request.gameName() == null){
             throw new BadRequestException("missing game name");
         }
@@ -40,7 +41,7 @@ public class GameService {
         return new CreateResult(id);
     }
 
-    public void joinGame(String authToken, JoinRequest request){
+    public void joinGame(String authToken, JoinRequest request) throws Exception {
         if (request.playerColor() == null || request.gameID() <= 0){
             throw new BadRequestException("missing player color or game ID");
         }
@@ -56,12 +57,14 @@ public class GameService {
             if (!(game.whiteUsername() == null)){
                 throw new AlreadyTakenException("white already taken");
             }
-            updatedGame = new GameData(request.gameID(), auth.username(), game.blackUsername(), game.gameName(), game.game());
+            updatedGame = new GameData(request.gameID(), auth.username(),
+                    game.blackUsername(), game.gameName(), game.game());
         }else{
             if (!(game.blackUsername() == null)){
                 throw new AlreadyTakenException("white already taken");
             }
-            updatedGame = new GameData(request.gameID(), game.whiteUsername(), auth.username(), game.gameName(), game.game());
+            updatedGame = new GameData(request.gameID(), game.whiteUsername(),
+                    auth.username(), game.gameName(), game.game());
         }
 
         try {

@@ -38,42 +38,4 @@ public class UserHandler {
             ctx.json(Map.of("message", "Error: " + e.getMessage()));
         }
     }
-
-    public void login(Context ctx){
-        try {
-            LoginRequest request =
-                    gson.fromJson(ctx.body(), LoginRequest.class);
-
-            LoginResult result = service.login(request);
-
-            ctx.status(200);
-            ctx.result(gson.toJson(result));
-            ctx.contentType("application/json");
-        } catch (BadRequestException e) {
-            ctx.status(400);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        } catch (UnauthorizedException e) {
-            ctx.status(401);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        } catch (Exception e) {
-            ctx.status(500);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        }
-    }
-
-    public void logout(Context ctx){
-        try {
-            String authToken = ctx.header("authorization");
-
-            service.logout(authToken);
-
-            ctx.status(200);
-        } catch (UnauthorizedException e) {
-            ctx.status(401);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        } catch (Exception e) {
-            ctx.status(500);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        }
-    }
 }

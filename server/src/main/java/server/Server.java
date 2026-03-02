@@ -2,7 +2,9 @@ package server;
 
 import com.google.gson.Gson;
 import dataaccess.*;
+import handler.ClearHandler;
 import handler.GameHandler;
+import handler.SessionHandler;
 import handler.UserHandler;
 import io.javalin.*;
 import org.eclipse.jetty.server.Authentication;
@@ -19,16 +21,19 @@ public class Server {
         GameDAO gameDAO = new MemoryGameDAO();
         UserHandler userHandler = new UserHandler(userDAO, authDAO);
         GameHandler gameHandler = new GameHandler(gameDAO, authDAO);
+        SessionHandler sessionHandler = new SessionHandler(userDAO, authDAO);
+        ClearHandler clearHandler = new ClearHandler();
 
         javalin.post("/user", userHandler::register);
-        javalin.post("/session", userHandler::login);
-        javalin.delete("/session", userHandler::logout);
+
+        javalin.post("/session", sessionHandler::login);
+        javalin.delete("/session", sessionHandler::logout);
 
         javalin.get("/game", gameHandler::listGames);
         javalin.post("/game", gameHandler::createGame);
         javalin.put("/game", gameHandler::joinGame);
 
-        javalin.delete("/db", this::clear);
+        javalin.delete("/db", clearHandler::clear);
         // Register your endpoints and exception handlers here.
     }
 

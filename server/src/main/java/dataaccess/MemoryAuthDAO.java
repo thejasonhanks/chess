@@ -1,25 +1,37 @@
 package dataaccess;
 
 import model.AuthData;
+import model.GameData;
+
+import java.util.HashMap;
+import java.util.UUID;
 
 public class MemoryAuthDAO implements AuthDAO{
-    @Override
-    public void createAuth(AuthData auth) {
-
+    final private HashMap<String, AuthData> auths = new HashMap<>();
+    public static String generateToken() {
+        return UUID.randomUUID().toString();
     }
 
     @Override
-    public AuthData getAuth(String authToken) {
-        return null;
+    public String createAuth(String username) throws DataAccessException {
+        String token = generateToken();
+        AuthData authData = new AuthData(token, username);
+        auths.put(token, authData);
+        return token;
     }
 
     @Override
-    public void deleteAuth(AuthData authData) {
-
+    public AuthData getAuth(String authToken) throws DataAccessException {
+        return auths.get(authToken);
     }
 
     @Override
-    public void clearAuth() {
+    public void deleteAuth(String authToken) throws DataAccessException {
+        auths.remove(authToken);
+    }
 
+    @Override
+    public void clearAuth() throws DataAccessException {
+        auths.clear();
     }
 }

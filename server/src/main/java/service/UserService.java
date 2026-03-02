@@ -6,7 +6,6 @@ import model.AuthData;
 import model.UserData;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public class UserService {
     private final UserDAO userDAO;
@@ -33,8 +32,7 @@ public class UserService {
 
         userDAO.createUser(user);
 
-        String token = UUID.randomUUID().toString();
-        authDAO.createAuth(new AuthData(token, registerRequest.username()));
+        String token = authDAO.createAuth(registerRequest.username());
         return new RegisterResult(registerRequest.username(), token);
     }
 
@@ -51,12 +49,12 @@ public class UserService {
         if (!Objects.equals(user.password(), loginRequest.password())){
             throw new BadRequestException("password doesn't match");
         }
-        String token = UUID.randomUUID().toString();
-        authDAO.createAuth(new AuthData(token, loginRequest.username()));
+
+        String token = authDAO.createAuth(loginRequest.username());
         return new LoginResult(loginRequest.username(), token);
     }
 
-    public void logout(String authToken) {
+    public void logout(String authToken) throws Exception {
         if (authToken == null){
             throw new UnauthorizedException("unauthorized");
         }
@@ -64,6 +62,6 @@ public class UserService {
         if (auth == null){
             throw new UnauthorizedException("unauthorized");
         }
-        authDAO.deleteAuth(auth);
+        authDAO.deleteAuth(authToken);
     }
 }

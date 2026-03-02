@@ -12,7 +12,7 @@ public class MemoryGameDAO implements GameDAO{
     private int nextGameID = 1;
 
     @Override
-    public int createGame(String gameName) {
+    public int createGame(String gameName) throws DataAccessException {
         int id = nextGameID++;
         GameData game = new GameData(id, null, null, gameName, new ChessGame());
 
@@ -22,17 +22,17 @@ public class MemoryGameDAO implements GameDAO{
     }
 
     @Override
-    public GameData getGame(int gameID) {
+    public GameData getGame(int gameID) throws DataAccessException {
         return games.get(gameID);
     }
 
     @Override
-    public ArrayList<GameData> listGames() {
+    public ArrayList<GameData> listGames() throws DataAccessException {
         return new ArrayList<>(games.values());
     }
 
     @Override
-    public void updateGame(GameData updatedGame) {
+    public void updateGame(GameData updatedGame) throws DataAccessException {
         int id = updatedGame.gameID();
 
         if (!games.containsKey(id)){
@@ -43,7 +43,7 @@ public class MemoryGameDAO implements GameDAO{
     }
 
     @Override
-    public void clearGame() {
+    public void clearGame() throws DataAccessException {
 
     }
 }
