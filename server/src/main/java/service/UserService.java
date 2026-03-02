@@ -19,7 +19,7 @@ public class UserService {
 
     public RegisterResult register(RegisterRequest registerRequest) throws Exception {
         if (userDAO.getUser(registerRequest.username()) != null){
-            throw new AlreadyTakenException("Error: username already taken");
+            throw new AlreadyTakenException("username already taken");
         }
 
         UserData user = new UserData(
@@ -36,20 +36,20 @@ public class UserService {
     }
     public LoginResult login(LoginRequest loginRequest) throws Exception{
         if (userDAO.getUser(loginRequest.username()) == null){
-            throw new BadRequest("Error: username doesn't exist");
+            throw new BadRequestException("username doesn't exist");
         }
 
         UserData user = userDAO.getUser(loginRequest.username());
 
         if (!Objects.equals(user.password(), loginRequest.password())){
-            throw new BadRequest("Error: password doesn't match");
+            throw new BadRequestException("password doesn't match");
         }
         String token = UUID.randomUUID().toString();
         authDAO.createAuth(new AuthData(token, loginRequest.username()));
         return new LoginResult(loginRequest.username(), token);
     }
-    public void logout(LogoutRequest logoutRequest) {
-        AuthData auth = authDAO.getAuth(logoutRequest.authToken());
+    public void logout(String authToken) {
+        AuthData auth = authDAO.getAuth(authToken);
         authDAO.deleteAuth(auth);
     }
 }
