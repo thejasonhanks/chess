@@ -24,11 +24,6 @@ public class MemoryUserDAO implements UserDAO{
     }
 
     @Override
-    public void deleteUser(String username) throws DataAccessException {
-        users.remove(username);
-    }
-
-    @Override
     public void clearUser() throws DataAccessException {
         users.clear();
     }
