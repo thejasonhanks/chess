@@ -17,7 +17,6 @@ import static chess.ChessPiece.PieceType.PAWN;
 public class ChessGame {
     public TeamColor turn;
     public ChessBoard board;
-    //private static ChessPosition enPassantTarget;
     public ChessGame() {
         setTeamTurn(TeamColor.WHITE);
         board = new ChessBoard();
@@ -92,14 +91,6 @@ public class ChessGame {
                 if (movingPiece.getPieceType() != PAWN) {
                     board.addPiece(end, movingPiece);
                     board.addPiece(start, null);
-//               else if (abs(end.getRow() - start.getRow()) > 1) {
-//                    board.addPiece(end, movingPiece);
-//                    board.addPiece(start, null);
-//                    if (movingPiece.getTeamColor() == TeamColor.WHITE){
-//                        enPassantTarget = new ChessPosition(end.getRow() - 1, end.getColumn());
-//                    } else{
-//                        enPassantTarget = new ChessPosition(end.getRow() + 1, end.getColumn());
-//                    }
                 }else if (move.getPromotionPiece() == null) {
                     board.addPiece(end, movingPiece);
                     board.addPiece(start, null);
@@ -135,12 +126,12 @@ public class ChessGame {
         }else{
             enemyTeamColor = TeamColor.WHITE;
         }
-        ChessPosition king_pos = null;
+        ChessPosition kingPosition = null;
         ChessPiece p;
         for (ChessPosition pos : board.allPositions()) {
             p = board.getPiece(pos);
             if ((p != null) && (p.getTeamColor() == teamColor) && (p.getPieceType() == ChessPiece.PieceType.KING)) {
-                king_pos = pos;
+                kingPosition = pos;
                 break;
             }
         }
@@ -149,7 +140,7 @@ public class ChessGame {
             if ((p != null) && (p.getTeamColor() == enemyTeamColor)) {
                 Collection<ChessMove> moves = p.pieceMoves(board, pos);
                 for (ChessMove m : moves) {
-                    if (m.getEndPosition().equals(king_pos)) {
+                    if (m.getEndPosition().equals(kingPosition)) {
                         return true;
                     }
                 }
@@ -169,7 +160,7 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        if (!isInCheck(teamColor)) return false;
+        if (!isInCheck(teamColor)) { return false; }
         else {
             for (ChessPosition pos : board.allPositions()) {
                 ChessPiece p = board.getPiece(pos);
@@ -189,7 +180,7 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        if (isInCheck(teamColor)) return false;
+        if (isInCheck(teamColor)) { return false; }
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition position = new ChessPosition(row, col);
@@ -226,10 +217,6 @@ public class ChessGame {
     public ChessBoard getBoard() {
         return board;
     }
-
-//    public static ChessPosition getEnPassantTarget() {
-//        return enPassantTarget;
-//    }
 
     @Override
     public boolean equals(Object o) {

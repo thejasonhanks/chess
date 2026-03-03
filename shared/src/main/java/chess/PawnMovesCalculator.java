@@ -33,8 +33,9 @@ public class PawnMovesCalculator extends PieceMovesCalculator {
                 ChessPosition newPosition = new ChessPosition(nRow, nCol);
 
                 // empty space
-                if (board.getPiece(newPosition) == null && i == 0)
+                if (board.getPiece(newPosition) == null && i == 0) {
                     addMove(positions, color, nRow, myPosition, newPosition);
+                }
 
                 //starting position
                 if (i == 1 && board.getPiece(newPosition) == null) {
@@ -45,12 +46,14 @@ public class PawnMovesCalculator extends PieceMovesCalculator {
                 }
 
                 // left capture
-                if (i == 2 && board.getPiece(newPosition) != null && checkEnemy(board, newPosition, myPosition))
+                if (i == 2 && board.getPiece(newPosition) != null && checkEnemy(board, newPosition, myPosition)) {
                     addMove(positions, color, nRow, myPosition, newPosition);
+                }
 
                 // right capture
-                if (i == 3 && board.getPiece(newPosition) != null && checkEnemy(board, newPosition, myPosition))
+                if (i == 3 && board.getPiece(newPosition) != null && checkEnemy(board, newPosition, myPosition)) {
                     addMove(positions, color, nRow, myPosition, newPosition);
+                }
             }
             i++;
         }
