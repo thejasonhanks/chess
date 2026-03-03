@@ -36,7 +36,7 @@ public class MemoryGameDAO implements GameDAO{
         int id = updatedGame.gameID();
 
         if (!games.containsKey(id)){
-            throw new BadRequestException("game doesn't exist");
+            throw new BadRequestException();
         }
 
         games.put(id, updatedGame);

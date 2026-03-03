@@ -1,7 +1,6 @@
 package dataaccess;
 
 import model.AuthData;
-import model.GameData;
 
 import java.util.HashMap;
 import java.util.UUID;

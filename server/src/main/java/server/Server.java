@@ -8,13 +8,32 @@ import handler.SessionHandler;
 import handler.UserHandler;
 import io.javalin.*;
 import org.eclipse.jetty.server.Authentication;
+import service.AlreadyTakenException;
+import service.BadRequestException;
+import service.UnauthorizedException;
+
 
 public class Server {
-
+    private final Gson gson = new Gson();
     private final Javalin javalin;
 
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
+        javalin.exception(BadRequestException.class, (e, ctx) -> {
+           ctx.status(400);
+           ctx.result("{\"message\":\"Error: bad request\"}");
+           ctx.contentType("application/json");
+        });
+        javalin.exception(UnauthorizedException.class, (e,ctx) -> {
+            ctx.status(401);
+            ctx.result("{\"message\":\"Error: unauthorized\"}");
+            ctx.contentType("application/json");
+        });
+        javalin.exception(AlreadyTakenException.class, (e, ctx) -> {
+            ctx.status(403);
+            ctx.result("{\"message\":\"Error: already taken\"}");
+            ctx.contentType("application/json");
+        });
 
         UserDAO userDAO = new MemoryUserDAO();
         AuthDAO authDAO = new MemoryAuthDAO();
@@ -34,7 +53,6 @@ public class Server {
         javalin.put("/game", gameHandler::joinGame);
 
         javalin.delete("/db", clearHandler::clear);
-        // Register your endpoints and exception handlers here.
     }
 
     public int run(int desiredPort) {

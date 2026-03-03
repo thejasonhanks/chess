@@ -18,10 +18,10 @@ public class UserService {
 
     public RegisterResult register(RegisterRequest registerRequest) throws Exception {
         if (registerRequest.username() == null || registerRequest.password() == null){
-            throw new BadRequestException("missing username or password");
+            throw new BadRequestException();
         }
         if (userDAO.getUser(registerRequest.username()) != null){
-            throw new AlreadyTakenException("username already taken");
+            throw new AlreadyTakenException();
         }
 
         UserData user = new UserData(
@@ -38,29 +38,29 @@ public class UserService {
 
     public LoginResult login(LoginRequest loginRequest) throws Exception{
         if (loginRequest.username() == null || loginRequest.password() == null){
-            throw new BadRequestException("missing username or password");
+            throw new BadRequestException();
         }
         if (userDAO.getUser(loginRequest.username()) == null){
-            throw new BadRequestException("username doesn't exist");
+            throw new UnauthorizedException();
         }
 
         UserData user = userDAO.getUser(loginRequest.username());
 
         if (!Objects.equals(user.password(), loginRequest.password())){
-            throw new BadRequestException("password doesn't match");
+            throw new UnauthorizedException();
         }
 
         String token = authDAO.createAuth(loginRequest.username());
         return new LoginResult(loginRequest.username(), token);
     }
 
-    public void logout(String authToken) throws Exception {
+    public void logout(String authToken) throws Exception{
         if (authToken == null){
-            throw new UnauthorizedException("unauthorized");
+            throw new UnauthorizedException();
         }
         AuthData auth = authDAO.getAuth(authToken);
         if (auth == null){
-            throw new UnauthorizedException("unauthorized");
+            throw new UnauthorizedException();
         }
         authDAO.deleteAuth(authToken);
     }

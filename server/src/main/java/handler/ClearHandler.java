@@ -1,11 +1,10 @@
 package handler;
 
 import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import io.javalin.http.Context;
-
-import java.util.Map;
 
 public class ClearHandler {
     private final UserDAO userDAO;
@@ -18,15 +17,10 @@ public class ClearHandler {
         this.gameDAO = gameDAO;
     }
 
-    public void clear(Context ctx){
-        try {
-            userDAO.clearUser();
-            authDAO.clearAuth();
-            gameDAO.clearGame();
-            ctx.status(200);
-        } catch (Exception e) {
-            ctx.status(500);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        }
+    public void clear(Context ctx) throws DataAccessException {
+        userDAO.clearUser();
+        authDAO.clearAuth();
+        gameDAO.clearGame();
+        ctx.status(200);
     }
 }

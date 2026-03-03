@@ -16,71 +16,38 @@ public class GameHandler {
         this.service = new GameService(gameDAO, authDAO);
     }
 
-    public void listGames(Context ctx) {
-        try {
-            String authToken = ctx.header("authorization");
+    public void listGames(Context ctx) throws Exception {
+        String authToken = ctx.header("authorization");
 
-            ListResult result = service.listGames(authToken);
+        ListResult result = service.listGames(authToken);
 
-            ctx.status(200);
-            ctx.result(gson.toJson(result));
-            ctx.contentType("application/json");
-        } catch (UnauthorizedException e) {
-            ctx.status(401);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        } catch (Exception e) {
-            ctx.status(500);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        }
+        ctx.status(200);
+        ctx.result(gson.toJson(result));
+        ctx.contentType("application/json");
     }
 
-    public void createGame(Context ctx){
-        try {
-            String authToken = ctx.header("authorization");
+    public void createGame(Context ctx) throws Exception {
+        String authToken = ctx.header("authorization");
 
-            CreateRequest request =
-                    gson.fromJson(ctx.body(), CreateRequest.class);
+        CreateRequest request =
+                gson.fromJson(ctx.body(), CreateRequest.class);
 
-            CreateResult result = service.createGame(authToken, request);
+        CreateResult result = service.createGame(authToken, request);
 
-            ctx.status(200);
-            ctx.result(gson.toJson(result));
-            ctx.contentType("application/json");
-        } catch (BadRequestException e) {
-            ctx.status(400);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        } catch (UnauthorizedException e) {
-            ctx.status(401);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        } catch (Exception e) {
-            ctx.status(500);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        }
+        ctx.status(200);
+        ctx.result(gson.toJson(result));
+        ctx.contentType("application/json");
     }
 
-    public void joinGame(Context ctx){
-        try {
-            String authToken = ctx.header("authorization");
+    public void joinGame(Context ctx) throws Exception {
+        String authToken = ctx.header("authorization");
 
-            JoinRequest request =
-                    gson.fromJson(ctx.body(), JoinRequest.class);
+        JoinRequest request =
+                gson.fromJson(ctx.body(), JoinRequest.class);
 
-            service.joinGame(authToken, request);
+        service.joinGame(authToken, request);
 
-            ctx.status(200);
-            ctx.contentType("application/json");
-        } catch (BadRequestException e) {
-            ctx.status(400);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        } catch (UnauthorizedException e) {
-            ctx.status(401);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        } catch (AlreadyTakenException e){
-            ctx.status(403);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        } catch (Exception e) {
-            ctx.status(500);
-            ctx.json(Map.of("message", "Error: " + e.getMessage()));
-        }
+        ctx.status(200);
+        ctx.contentType("application/json");
     }
 }
