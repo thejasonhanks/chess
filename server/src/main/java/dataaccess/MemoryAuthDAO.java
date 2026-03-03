@@ -7,6 +7,11 @@ import java.util.UUID;
 
 public class MemoryAuthDAO implements AuthDAO{
     final private HashMap<String, AuthData> auths = new HashMap<>();
+
+    public HashMap<String, AuthData> getAuths() {
+        return auths;
+    }
+
     public static String generateToken() {
         return UUID.randomUUID().toString();
     }

@@ -8,8 +8,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MemoryGameDAO implements GameDAO{
+
     final private HashMap<Integer, GameData> games = new HashMap<>();
     private int nextGameID = 1;
+
+    public HashMap<Integer, GameData> getGames() {
+        return games;
+    }
 
     @Override
     public int createGame(String gameName) throws DataAccessException {

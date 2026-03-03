@@ -6,8 +6,6 @@ import dataaccess.GameDAO;
 import service.*;
 import io.javalin.http.Context;
 
-import java.util.Map;
-
 public class GameHandler {
     private final Gson gson = new Gson();
     private final GameService service;

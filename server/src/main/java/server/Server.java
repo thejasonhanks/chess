@@ -7,7 +7,6 @@ import handler.GameHandler;
 import handler.SessionHandler;
 import handler.UserHandler;
 import io.javalin.*;
-import org.eclipse.jetty.server.Authentication;
 import service.AlreadyTakenException;
 import service.BadRequestException;
 import service.UnauthorizedException;
