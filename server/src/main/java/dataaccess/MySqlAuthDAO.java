@@ -35,8 +35,8 @@ public class MySqlAuthDAO implements AuthDAO{
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return new AuthData(
-                            rs.getString("username"),
-                            rs.getString("authToken")
+                            rs.getString("authToken"),
+                            rs.getString("username")
                     );
                 } else {
                     return null;
@@ -72,8 +72,8 @@ public class MySqlAuthDAO implements AuthDAO{
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 AuthData authData = new AuthData(
-                        rs.getString("username"),
-                        rs.getString("authToken")
+                        rs.getString("authToken"),
+                        rs.getString("username")
                 );
                 auths.put(authData.authToken(), authData);
             }
