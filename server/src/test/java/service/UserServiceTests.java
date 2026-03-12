@@ -4,6 +4,7 @@ import dataaccess.*;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,7 +48,8 @@ public class UserServiceTests {
 
     @Test
     void loginPositive() throws Exception {
-        userDAO.createUser(new UserData("myUser", "1234", "email@email.com"));
+        String hashed = BCrypt.hashpw("1234", BCrypt.gensalt());
+        userDAO.createUser(new UserData("myUser", hashed, "email@email.com"));
         LoginRequest request = new LoginRequest("myUser", "1234");
         LoginResult result = service.login(request);
 
@@ -58,7 +60,8 @@ public class UserServiceTests {
 
     @Test
     void loginNegative() throws Exception {
-        userDAO.createUser(new UserData("myUser", "1234", "email@email.com"));
+        String hashed = BCrypt.hashpw("1234", BCrypt.gensalt());
+        userDAO.createUser(new UserData("myUser", hashed, "email@email.com"));
         LoginRequest request = new LoginRequest("myUser", "4321");
         assertThrows(UnauthorizedException.class, () -> {
             service.login(request);

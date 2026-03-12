@@ -16,7 +16,7 @@ public class ClearService {
             this.gameDAO = gameDAO;
             this.authDAO = authDAO;
         } catch (Exception e) {
-            throw new RuntimeException(String.format("Failed to clear database: %s", e.getMessage()));
+            throw new RuntimeException(String.format("Error: Failed to clear database: %s", e.getMessage()));
         }
     }
 

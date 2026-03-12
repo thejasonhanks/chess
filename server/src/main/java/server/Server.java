@@ -33,6 +33,11 @@ public class Server {
             ctx.result("{\"message\":\"" + e.getMessage() + "\"}");
             ctx.contentType("application/json");
         });
+        javalin.exception(Exception.class, (e, ctx) -> {
+            ctx.status(500);
+            ctx.result("{\"message\":\"Error:" + e.getMessage() + "\"}");
+            ctx.contentType("application/json");
+        });
 
 //        UserDAO userDAO = new MemoryUserDAO();
 //        AuthDAO authDAO = new MemoryAuthDAO();
