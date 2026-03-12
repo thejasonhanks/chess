@@ -5,7 +5,6 @@ import model.UserData;
 import java.util.HashMap;
 
 import model.*;
-import service.AlreadyTakenException;
 
 import java.sql.*;
 
@@ -51,7 +50,11 @@ public class MySqlUserDAO implements UserDAO{
     @Override
     public void clearUser() throws DataAccessException {
         String statement = "DELETE FROM users";
-        DatabaseManager.executeUpdate(statement);
+        try {
+            DatabaseManager.executeUpdate(statement);
+        } catch (DataAccessException e) {
+            throw new DataAccessException(String.format("Unable to read access data: %s", e.getMessage()));
+        }
     }
 
 

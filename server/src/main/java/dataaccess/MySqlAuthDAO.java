@@ -28,7 +28,7 @@ public class MySqlAuthDAO implements AuthDAO{
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        String statement = "SELECT username FROM auth WHERE authToken = ?";
+        String statement = "SELECT username, authToken FROM auth WHERE authToken = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(statement)) {
             ps.setString(1, authToken);
@@ -56,20 +56,24 @@ public class MySqlAuthDAO implements AuthDAO{
     @Override
     public void clearAuth() throws DataAccessException {
         String statement = "DELETE FROM auth";
-        DatabaseManager.executeUpdate(statement);
+        try {
+            DatabaseManager.executeUpdate(statement);
+        } catch (DataAccessException e) {
+            throw new DataAccessException(String.format("Unable to read access data: %s", e.getMessage()));
+        }
     }
 
     @Override
     public HashMap<String, AuthData> getAuths() throws DataAccessException {
         HashMap<String, AuthData> auths = new HashMap<>();
-        String statement = "SELECT username FROM auth";
+        String statement = "SELECT username, authToken FROM auth";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(statement);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 AuthData authData = new AuthData(
-                        rs.getString("authToken"),
-                        rs.getString("username")
+                        rs.getString("username"),
+                        rs.getString("authToken")
                 );
                 auths.put(authData.authToken(), authData);
             }
@@ -82,8 +86,8 @@ public class MySqlAuthDAO implements AuthDAO{
     private final String[] createStatements = {
             """
             CREATE TABLE IF NOT EXISTS auth (
-                `username` varchar(225) NOT NULL,
-                `authToken` varchar(255) NOT NULL,
+                `username` VARCHAR(225) NOT NULL,
+                `authToken` VARCHAR(255) NOT NULL UNIQUE,
                 PRIMARY KEY(`username`),
                 INDEX(authToken)
                 )
