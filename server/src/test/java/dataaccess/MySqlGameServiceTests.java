@@ -1,12 +1,10 @@
-package service;
+package dataaccess;
 
-import dataaccess.*;
 import model.*;
-import chess.ChessGame;
 import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
+import service.*;
 
-import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MySqlGameServiceTests {
     private GameDAO gameDAO;

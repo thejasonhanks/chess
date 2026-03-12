@@ -1,8 +1,12 @@
-package service;
+package dataaccess;
 
-import dataaccess.*;
 import model.UserData;
 import org.junit.jupiter.api.*;
+import service.AlreadyTakenException;
+import service.BadRequestException;
+import service.RegisterRequest;
+import service.UserService;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MySqlUserServiceTests {
