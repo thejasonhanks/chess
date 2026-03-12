@@ -47,9 +47,6 @@ public class UserService {
             throw new UnauthorizedException("Error: unauthorized");
         }
 
-        System.out.println(user.password());
-
-
 
         if (!BCrypt.checkpw(loginRequest.password(), user.password())){
             throw new UnauthorizedException("Error: unauthorized");
