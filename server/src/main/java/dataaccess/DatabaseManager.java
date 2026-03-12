@@ -3,6 +3,8 @@ package dataaccess;
 import java.sql.*;
 import java.util.Properties;
 
+import static java.sql.Statement.RETURN_GENERATED_KEYS;
+
 public class DatabaseManager {
     private static String databaseName;
     private static String dbUsername;
@@ -49,6 +51,27 @@ public class DatabaseManager {
             return conn;
         } catch (SQLException ex) {
             throw new DataAccessException("failed to get connection", ex);
+        }
+    }
+
+    public static int executeUpdate(String statement, Object... params) throws DataAccessException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
+                for (int i = 0; i < params.length; i++) {
+                    Object param = params[i];
+                    ps.setObject(i+1, param);
+                }
+                ps.executeUpdate();
+
+                ResultSet rs = ps.getGeneratedKeys();
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+            return 0;
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("unable to update database: %s, %s", statement, e.getMessage()));
         }
     }
 
