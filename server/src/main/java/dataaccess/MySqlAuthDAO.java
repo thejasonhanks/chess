@@ -3,8 +3,11 @@ package dataaccess;
 import model.AuthData;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class MySqlAuthDAO implements AuthDAO{
     public MySqlAuthDAO() throws DataAccessException{
@@ -13,27 +16,67 @@ public class MySqlAuthDAO implements AuthDAO{
 
     @Override
     public String createAuth(String username) throws DataAccessException {
-        return "";
+        String token = UUID.randomUUID().toString();
+        String statement = "INSERT INTO auth (username, authToken) VALUES (?, ?)";
+        try{
+            DatabaseManager.executeUpdate(statement, username, token);
+        } catch (DataAccessException e) {
+            throw new DataAccessException(String.format("Unable to access data: %s", e.getMessage()));
+        }
+        return token;
     }
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        return null;
+        String statement = "SELECT username FROM auth WHERE authToken = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(statement)) {
+            ps.setString(1, authToken);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new AuthData(
+                            rs.getString("username"),
+                            rs.getString("authToken")
+                    );
+                } else {
+                    return null;
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to access data: %s", e.getMessage()));
+        }
     }
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-
+        String statement = "DELETE FROM auth WHERE authToken = ?";
+        DatabaseManager.executeUpdate(statement, authToken);
     }
 
     @Override
     public void clearAuth() throws DataAccessException {
-
+        String statement = "DELETE FROM auth";
+        DatabaseManager.executeUpdate(statement);
     }
 
     @Override
-    public HashMap<String, AuthData> getAuths() {
-        return null;
+    public HashMap<String, AuthData> getAuths() throws DataAccessException {
+        HashMap<String, AuthData> auths = new HashMap<>();
+        String statement = "SELECT username FROM auth";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(statement);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                AuthData authData = new AuthData(
+                        rs.getString("authToken"),
+                        rs.getString("username")
+                );
+                auths.put(authData.authToken(), authData);
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to read data: %s", e.getMessage()));
+        }
+        return auths;
     }
 
     private final String[] createStatements = {
@@ -41,8 +84,8 @@ public class MySqlAuthDAO implements AuthDAO{
             CREATE TABLE IF NOT EXISTS auth (
                 `username` varchar(225) NOT NULL,
                 `authToken` varchar(255) NOT NULL,
-                PRIMARY KEY(`authToken`),
-                INDEX(username)
+                PRIMARY KEY(`username`),
+                INDEX(authToken)
                 )
 """
     };
