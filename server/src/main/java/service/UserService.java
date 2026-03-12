@@ -4,6 +4,7 @@ import dataaccess.AuthDAO;
 import dataaccess.UserDAO;
 import model.AuthData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.Objects;
 
@@ -24,9 +25,11 @@ public class UserService {
             throw new AlreadyTakenException();
         }
 
+        String hashedPassword = BCrypt.hashpw(registerRequest.password(), BCrypt.gensalt());
+
         UserData user = new UserData(
                 registerRequest.username(),
-                registerRequest.password(),
+                hashedPassword,
                 registerRequest.email()
         );
 
@@ -46,7 +49,8 @@ public class UserService {
 
         UserData user = userDAO.getUser(loginRequest.username());
 
-        if (!Objects.equals(user.password(), loginRequest.password())){
+        String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
+        if (BCrypt.checkpw(user.password(), hashedPassword)){
             throw new UnauthorizedException();
         }
 
