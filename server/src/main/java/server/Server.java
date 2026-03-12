@@ -39,9 +39,6 @@ public class Server {
             ctx.contentType("application/json");
         });
 
-//        UserDAO userDAO = new MemoryUserDAO();
-//        AuthDAO authDAO = new MemoryAuthDAO();
-//        GameDAO gameDAO = new MemoryGameDAO();
         UserDAO userDAO;
         AuthDAO authDAO;
         GameDAO gameDAO;

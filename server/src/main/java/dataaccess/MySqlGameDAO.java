@@ -13,7 +13,22 @@ import java.util.HashMap;
 
 public class MySqlGameDAO implements GameDAO{
     public MySqlGameDAO() throws DataAccessException {
-        configureDatabase();
+        String[] createStatements = {
+                """
+            CREATE TABLE IF NOT EXISTS games (
+                `gameID` INT NOT NULL AUTO_INCREMENT,
+                `whiteUsername` varchar(225),
+                `blackUsername` varchar(225),
+                `gameName` varchar(255) NOT NULL,
+                `game` TEXT,
+                PRIMARY KEY(`gameID`),
+                INDEX(whiteUsername),
+                INDEX(blackUsername),
+                INDEX(gameName)
+                )
+"""
+        };
+        DatabaseManager.configureDatabase(createStatements);
     }
 
     @Override
@@ -115,32 +130,4 @@ public class MySqlGameDAO implements GameDAO{
         return games;
     }
 
-    private final String[] createStatements = {
-            """
-            CREATE TABLE IF NOT EXISTS games (
-                `gameID` INT NOT NULL AUTO_INCREMENT,
-                `whiteUsername` varchar(225),
-                `blackUsername` varchar(225),
-                `gameName` varchar(255) NOT NULL,
-                `game` TEXT,
-                PRIMARY KEY(`gameID`),
-                INDEX(whiteUsername),
-                INDEX(blackUsername),
-                INDEX(gameName)
-                )
-"""
-    };
-
-    private void configureDatabase() throws DataAccessException {
-        DatabaseManager.createDatabase();
-        try (Connection conn = DatabaseManager.getConnection()) {
-            for (String statement : createStatements) {
-                try (var preparedStatement = conn.prepareStatement(statement)) {
-                    preparedStatement.executeUpdate();
-                }
-            }
-        } catch (SQLException ex) {
-            throw new DataAccessException(String.format("Unable to configure database: %s", ex.getMessage()));
-        }
-    }
 }
