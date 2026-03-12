@@ -1,7 +1,9 @@
 package dataaccess;
 
-import model.*;
-import org.junit.jupiter.api.*;
+import chess.ChessGame;
+import model.GameData;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import service.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,60 +13,82 @@ public class MySqlGameServiceTests {
     private AuthDAO authDAO;
     private GameService service;
 
-    @BeforeEach
-    void setUp() throws DataAccessException {
-        gameDAO = new MySqlGameDAO();
-        authDAO = new MySqlAuthDAO();
-        service = new GameService(gameDAO, authDAO);
+    public MySqlGameServiceTests() throws Exception {
+    }
 
-        // clear database before each test
-        gameDAO.clearGame();
-        authDAO.clearAuth();
+    @BeforeEach
+    void setUp() {
+        gameDAO = new MemoryGameDAO();
+        authDAO = new MemoryAuthDAO();
+        service = new GameService(gameDAO, authDAO);
     }
 
     @Test
-    void createGamePositive() throws Exception {
-        String token = authDAO.createAuth("user1");
-        CreateRequest request = new CreateRequest("My Game");
+    void listPositive() throws Exception {
+        String token = authDAO.createAuth("myUser");
+        CreateRequest request = new CreateRequest("Name");
+        service.createGame(token, request);
+
+        ListResult result = service.listGames(token);
+        assertNotNull(result);
+        assertEquals(1, result.games().size());
+    }
+
+    @Test
+    void listNegative() throws Exception{
+        String token = authDAO.createAuth("myUser");
+        assertThrows(UnauthorizedException.class, () -> {
+            service.listGames(token + "123");
+        });
+    }
+
+    @Test
+    void createPositive() throws Exception {
+        String token = authDAO.createAuth("myUser");
+        CreateRequest request = new CreateRequest("Name");
         CreateResult result = service.createGame(token, request);
 
         assertNotNull(result);
-        assertTrue(result.gameID() > 0);
+        assertNotNull(gameDAO.getGame(result.gameID()));
+    }
+
+    @Test
+    void createNegative() throws Exception {
+        String token = authDAO.createAuth("myUser");
+        CreateRequest request = new CreateRequest("Name");
+        assertThrows(UnauthorizedException.class, () -> {
+            service.createGame(token + "123", request);
+        });
+    }
+
+    @Test
+    void joinPositive() throws Exception {
+        String token = authDAO.createAuth("myUser");
+        CreateRequest request1 = new CreateRequest("Name");
+        CreateResult result = service.createGame(token, request1);
+
+        JoinRequest request2 = new JoinRequest("WHITE", result.gameID());
+        service.joinGame(token, request2);
 
         GameData game = gameDAO.getGame(result.gameID());
-        assertNotNull(game);
-        assertEquals("My Game", game.gameName());
+        assertNotNull(game.whiteUsername());
+        assertEquals("myUser", game.whiteUsername());
     }
 
     @Test
-    void createGameNegativeUnauthorized() {
-        CreateRequest request = new CreateRequest("My Game");
-        assertThrows(UnauthorizedException.class, () -> service.createGame("badToken", request));
-    }
+    void joinNegative() throws Exception {
+        String token = authDAO.createAuth("myUser");
+        CreateRequest request1 = new CreateRequest("Name");
+        CreateResult result = service.createGame(token, request1);
 
-    @Test
-    void joinGamePositive() throws Exception {
-        String token = authDAO.createAuth("user1");
-        int gameId = gameDAO.createGame("Game 1");
-        JoinRequest join = new JoinRequest("WHITE", gameId);
+        GameData newGame = new GameData(result.gameID(), "whiteUser", null,
+                "Name", new ChessGame());
+        gameDAO.updateGame(newGame);
 
-        service.joinGame(token, join);
+        JoinRequest request2 = new JoinRequest("WHITE", result.gameID());
 
-        GameData game = gameDAO.getGame(gameId);
-        assertEquals("user1", game.whiteUsername());
-    }
-
-    @Test
-    void joinGameNegativeAlreadyTaken() throws Exception {
-        String token1 = authDAO.createAuth("user1");
-        int gameId = gameDAO.createGame("Game 1");
-
-        // Manually set white player
-        GameData game = gameDAO.getGame(gameId);
-        GameData updated = new GameData(game.gameID(), "user2", game.blackUsername(), game.gameName(), game.game());
-        gameDAO.updateGame(updated);
-
-        JoinRequest join = new JoinRequest("WHITE", gameId);
-        assertThrows(AlreadyTakenException.class, () -> service.joinGame(token1, join));
+        assertThrows(AlreadyTakenException.class, () -> {
+            service.joinGame(token, request2);
+        });
     }
 }

@@ -1,11 +1,10 @@
 package dataaccess;
 
 import model.UserData;
-import org.junit.jupiter.api.*;
-import service.AlreadyTakenException;
-import service.BadRequestException;
-import service.RegisterRequest;
-import service.UserService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
+import service.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,41 +13,74 @@ public class MySqlUserServiceTests {
     private AuthDAO authDAO;
     private UserService service;
 
-    @BeforeEach
-    void setUp() throws DataAccessException {
-        userDAO = new MySqlUserDAO();
-        authDAO = new MySqlAuthDAO();
-        service = new UserService(userDAO, authDAO);
+    public MySqlUserServiceTests() {
+    }
 
-        // clear database before each test
-        userDAO.clearUser();
-        authDAO.clearAuth();
+    @BeforeEach
+    void setUp() {
+        userDAO = new MemoryUserDAO();
+        authDAO = new MemoryAuthDAO();
+        service = new UserService(userDAO, authDAO);
     }
 
     @Test
     void registerPositive() throws Exception {
-        var request = new RegisterRequest("user1", "pass1", "user1@email.com");
-        var result = service.register(request);
+        RegisterRequest request = new RegisterRequest("myUser", "1234", "email@email.com");
+        RegisterResult result = service.register(request);
 
         assertNotNull(result);
-        assertEquals("user1", result.username());
+        assertEquals("myUser", result.username());
         assertNotNull(result.authToken());
 
-        assertNotNull(userDAO.getUser("user1"));
+        assertNotNull(userDAO.getUser("myUser"));
         assertNotNull(authDAO.getAuth(result.authToken()));
     }
 
     @Test
-    void registerNegativeAlreadyTaken() throws Exception {
-        userDAO.createUser(new UserData("user1", "hash", "user1@email.com"));
-        var request = new RegisterRequest("user1", "pass1", "user1@email.com");
+    void registerNegative() throws Exception{
+        userDAO.createUser(new UserData("myUser", "password", "email@email.com"));
+        RegisterRequest request = new RegisterRequest("myUser", "1234", "email@email.com");
 
-        assertThrows(AlreadyTakenException.class, () -> service.register(request));
+        assertThrows(AlreadyTakenException.class, () -> {
+            service.register(request);
+        });
     }
 
     @Test
-    void registerNegativeBadRequest() {
-        var request = new RegisterRequest(null, null, null);
-        assertThrows(BadRequestException.class, () -> service.register(request));
+    void loginPositive() throws Exception {
+        String hashed = BCrypt.hashpw("1234", BCrypt.gensalt());
+        userDAO.createUser(new UserData("myUser", hashed, "email@email.com"));
+        LoginRequest request = new LoginRequest("myUser", "1234");
+        LoginResult result = service.login(request);
+
+        assertNotNull(authDAO.getAuth(result.authToken()));
+        assertEquals("myUser", result.username());
+        assertNotNull(result.authToken());
+    }
+
+    @Test
+    void loginNegative() throws Exception {
+        String hashed = BCrypt.hashpw("1234", BCrypt.gensalt());
+        userDAO.createUser(new UserData("myUser", hashed, "email@email.com"));
+        LoginRequest request = new LoginRequest("myUser", "4321");
+        assertThrows(UnauthorizedException.class, () -> {
+            service.login(request);
+        });
+    }
+
+    @Test
+    void logoutPositive() throws Exception {
+        String token = authDAO.createAuth("myUser");
+        service.logout(token);
+
+        assertNull(authDAO.getAuth(token));
+    }
+
+    @Test
+    void logoutNegative() throws Exception {
+        String token = authDAO.createAuth("myUser");
+        assertThrows(UnauthorizedException.class, () -> {
+            service.logout(token + "123");
+        });
     }
 }

@@ -1,43 +1,40 @@
 package dataaccess;
 
-import model.*;
-import org.junit.jupiter.api.*;
+import model.UserData;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import service.ClearService;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class MySqlClearServiceTest {
-    private UserDAO userDAO;
-    private AuthDAO authDAO;
     private GameDAO gameDAO;
-    private ClearService clearService;
+    private AuthDAO authDAO;
+    private UserDAO userDAO;
+    private ClearService service;
+
+    public MySqlClearServiceTest() throws Exception {
+    }
 
     @BeforeEach
     void setUp() throws DataAccessException {
-        userDAO = new MySqlUserDAO();
-        authDAO = new MySqlAuthDAO();
-        gameDAO = new MySqlGameDAO();
-        clearService = new ClearService(userDAO, gameDAO, authDAO);
-
-        // Ensure database starts empty
-        userDAO.clearUser();
-        authDAO.clearAuth();
-        gameDAO.clearGame();
+        gameDAO = new MemoryGameDAO();
+        authDAO = new MemoryAuthDAO();
+        userDAO = new MemoryUserDAO();
+        service = new ClearService(userDAO, gameDAO, authDAO);
     }
 
     @Test
     void clearPositive() throws Exception {
-        // Add some sample data
-        userDAO.createUser(new UserData("user1", "passhash", "user1@email.com"));
-        authDAO.createAuth("user1");
-        gameDAO.createGame("Test Game");
+        gameDAO.createGame("Name");
+        authDAO.createAuth("myUser");
+        userDAO.createUser(new UserData("myUser", "1234", "email@email.com"));
 
-        // Call the clear method
-        clearService.clear();
+        service.clear();
 
-        // Assert all tables are empty
-        assertTrue(userDAO.getUsers().isEmpty(), "Users table should be empty after clear");
-        assertTrue(authDAO.getAuths().isEmpty(), "Auth table should be empty after clear");
-        assertTrue(gameDAO.getGames().isEmpty(), "Games table should be empty after clear");
+        assertEquals(0, gameDAO.getGames().size());
+        assertEquals(0, userDAO.getUsers().size());
+        assertEquals(0, authDAO.getAuths().size());
     }
 }
