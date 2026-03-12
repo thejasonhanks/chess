@@ -18,7 +18,7 @@ public class ClearServiceTest {
     }
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws DataAccessException {
         gameDAO = new MemoryGameDAO();
         authDAO = new MemoryAuthDAO();
         userDAO = new MemoryUserDAO();

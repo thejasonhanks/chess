@@ -18,9 +18,12 @@ public class GameService {
     }
 
     public ListResult listGames(String authToken) throws Exception {
+        if (authToken == null || authToken.isEmpty()) {
+            throw new BadRequestException("Invalid Request: auth token must be provided");
+        }
         AuthData auth = authDAO.getAuth(authToken);
         if (auth == null){
-            throw new UnauthorizedException();
+            throw new UnauthorizedException("Invalid Request: unauthorized request");
         }
         ArrayList<GameData> games = gameDAO.listGames();
         return new ListResult(games);
@@ -28,12 +31,12 @@ public class GameService {
 
     public CreateResult createGame(String authToken, CreateRequest request) throws Exception {
         if (request.gameName() == null){
-            throw new BadRequestException();
+            throw new BadRequestException("Invalid Request: game name cannot be null");
         }
 
         AuthData auth = authDAO.getAuth(authToken);
         if (auth == null){
-            throw new UnauthorizedException();
+            throw new UnauthorizedException("Invalid Request: unauthorized request");
         }
 
         int id = gameDAO.createGame(request.gameName());
@@ -42,36 +45,36 @@ public class GameService {
 
     public void joinGame(String authToken, JoinRequest request) throws Exception {
         if (request.playerColor() == null || request.gameID() <= 0){
-            throw new BadRequestException();
+            throw new BadRequestException("Invalid Request: player color or gameID cannot be null");
         }
 
         AuthData auth = authDAO.getAuth(authToken);
         if (auth == null){
-            throw new UnauthorizedException();
+            throw new UnauthorizedException("Invalid Request: unauthorized request");
         }
 
         GameData game = gameDAO.getGame(request.gameID());
         GameData updatedGame;
         if (request.playerColor().equals("WHITE")){
             if (!(game.whiteUsername() == null)){
-                throw new AlreadyTakenException();
+                throw new AlreadyTakenException("Invalid Request: player color already taken");
             }
             updatedGame = new GameData(request.gameID(), auth.username(),
                     game.blackUsername(), game.gameName(), game.game());
         }else if (request.playerColor().equals("BLACK")){
             if (!(game.blackUsername() == null)){
-                throw new AlreadyTakenException();
+                throw new AlreadyTakenException("Invalid Request: player color already taken");
             }
             updatedGame = new GameData(request.gameID(), game.whiteUsername(),
                     auth.username(), game.gameName(), game.game());
         } else{
-            throw new BadRequestException();
+            throw new BadRequestException("Invalid Request: player color must be WHITE or BLACK");
         }
 
         try {
             gameDAO.updateGame(updatedGame);
         } catch(BadRequestException e){
-            throw new BadRequestException();
+            throw new BadRequestException("Invalid Request: bad request");
         }
 
     }

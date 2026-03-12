@@ -10,10 +10,14 @@ public class ClearService {
     private final GameDAO gameDAO;
     private final AuthDAO authDAO;
 
-    public ClearService(UserDAO userDAO, GameDAO gameDAO, AuthDAO authDAO){
-        this.userDAO = userDAO;
-        this.gameDAO = gameDAO;
-        this.authDAO = authDAO;
+    public ClearService(UserDAO userDAO, GameDAO gameDAO, AuthDAO authDAO) {
+        try {
+            this.userDAO = userDAO;
+            this.gameDAO = gameDAO;
+            this.authDAO = authDAO;
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Failed to clear database: %s", e.getMessage()));
+        }
     }
 
     public void clear() throws DataAccessException {
