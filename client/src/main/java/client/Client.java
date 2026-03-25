@@ -86,7 +86,7 @@ public class Client {
                     case "create" -> createGame(params);
                     case "list" -> listGames();
                     case "join" -> joinGame(params);
-                    //case "observe" -> observeGame(params);
+                    case "observe" -> observeGame(params);
                     case "logout" -> logout();
                     case "quit" -> "quit";
                     default -> help();
@@ -178,13 +178,24 @@ public class Client {
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameID> <WHITE|BLACK>");
     }
 
-//    public String observeGame(String... params) throws ResponseException {
-//        assertSignedIn();
-//
-//        if (params.length >=1){
-//            server.observeGame(
-//
-//  }
+    public String observeGame(String... params) throws ResponseException {
+        assertSignedIn();
+
+        if (params.length >=1){
+            int index = Integer.parseInt(params[0]) - 1);
+
+            if (index < 0 || index >= gameList.size()) {
+                throw new ResponseException(ResponseException.Code.ClientError, "Invalid game number");
+            }
+
+            drawBoard(true);
+
+            return "Observing game" + index;
+        }
+
+        throw new ResponseException(ResponseException.Code.ClientError, "Expected <number>");
+
+  }
 
     public String logout() throws ResponseException {
         assertSignedIn();
