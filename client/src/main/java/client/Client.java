@@ -287,10 +287,18 @@ public class Client {
     }
 
     private String getPiece(int r, int col, String[] whiteBack, String[] blackBack) {
-        if (r == 1) return WHITE_PAWN;
-        if (r == 6) return SET_TEXT_COLOR_BLACK + BLACK_PAWN;
-        if (r == 0) return whiteBack[col];
-        if (r == 7) return SET_TEXT_COLOR_BLACK + blackBack[col];
+        if (r == 1) {
+            return WHITE_PAWN;
+        }
+        if (r == 6) {
+            return SET_TEXT_COLOR_BLACK + BLACK_PAWN;
+        }
+        if (r == 0) {
+            return whiteBack[col];
+        }
+        if (r == 7) {
+            return SET_TEXT_COLOR_BLACK + blackBack[col];
+        }
         return EMPTY;
     }
 }

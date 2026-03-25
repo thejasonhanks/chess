@@ -36,19 +36,9 @@ public class ResponseException extends Exception {
         return new ResponseException(code, message);
     }
 
-    public Code code() {
-        return code;
-    }
-
     public static Code fromHttpStatusCode(int httpStatusCode) {
         if (httpStatusCode >= 500) {return Code.ServerError;}
         else {return Code.ClientError;}
     }
 
-    public int toHttpStatusCode() {
-        return switch (code) {
-            case ServerError -> 500;
-            case ClientError -> 400;
-        };
-    }
 }
