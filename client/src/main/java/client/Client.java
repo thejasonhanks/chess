@@ -28,7 +28,7 @@ public class Client {
         LOGGEDIN
     }
 
-    public Client(String serverUrl) throws Exception {
+    public Client(String serverUrl) {
         server = new ServerFacade(serverUrl);
     }
 
