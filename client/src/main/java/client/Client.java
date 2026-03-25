@@ -69,7 +69,7 @@ public class Client {
                 return switch (cmd) {
                     case "register" -> register(params);
                     case "login" -> login(params);
-                    case "quit" -> "Goodbye";
+                    case "quit" -> "quit";
                     case "help" -> help();
                     default -> "Please enter a valid response. Type 'help' to see your options.";
                 };
@@ -87,7 +87,7 @@ public class Client {
                 };
             }
         } catch (Exception ex) {
-            return "Error: " + ex.getMessage();
+            return ex.getMessage();
         }
     }
 
@@ -108,7 +108,7 @@ public class Client {
     }
 
     public String login(String... params) throws ResponseException {
-        if (params.length >= 2) {
+        if (params.length == 2) {
             var result = server.login(new LoginRequest(params[0], params[1]));
 
             authToken = result.authToken();
@@ -118,7 +118,7 @@ public class Client {
             return "Logged in as " + username + ". Type 'help' to see further options.";
         }
 
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <username> <password>");
+        throw new ResponseException(ResponseException.Code.ClientError, "Error: Expected: <username> <password>");
     }
 
     public String createGame(String... params) throws ResponseException {
@@ -187,19 +187,22 @@ public class Client {
     public String observeGame(String... params) throws ResponseException {
         assertSignedIn();
 
-        if (params.length >=1){
-            int index = Integer.parseInt(params[0]) - 1;
+        if (params.length == 1){
+            try {
+                int index = Integer.parseInt(params[0]) - 1;
+                if (index < 0 || index >= gameList.size()) {
+                    throw new ResponseException(ResponseException.Code.ClientError, "Error: Invalid game number");
+                }
 
-            if (index < 0 || index >= gameList.size()) {
-                throw new ResponseException(ResponseException.Code.ClientError, "Invalid game number");
+                drawBoard(true);
+
+                return "Observing game" + index;
+            } catch(Throwable ex){
+                throw new ResponseException(ResponseException.Code.ClientError, "Error: Invalid game number");
             }
-
-            drawBoard(true);
-
-            return "Observing game" + index;
         }
 
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected <number>");
+        throw new ResponseException(ResponseException.Code.ClientError, "Error: Expected <number>");
 
   }
 
