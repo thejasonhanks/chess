@@ -55,14 +55,16 @@ public class GameService {
 
         GameData game = gameDAO.getGame(request.gameID());
         GameData updatedGame;
+        String white = game.whiteUsername();
+        String black = game.blackUsername();
         if (request.playerColor().equals("WHITE")){
-            if (!(game.whiteUsername() == null)){
+            if (white != null && !white.equals(auth.username())) {
                 throw new AlreadyTakenException("player color already taken");
             }
             updatedGame = new GameData(request.gameID(), auth.username(),
                     game.blackUsername(), game.gameName(), game.game());
         }else if (request.playerColor().equals("BLACK")){
-            if (!(game.blackUsername() == null)){
+            if (black != null && !black.equals(auth.username())){
                 throw new AlreadyTakenException("player color already taken");
             }
             updatedGame = new GameData(request.gameID(), game.whiteUsername(),

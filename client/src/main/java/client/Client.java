@@ -275,6 +275,7 @@ public class Client {
 
                 out.print(piece);
                 out.print(RESET_BG_COLOR);
+                out.print(RESET_TEXT_COLOR);
             }
             out.print(" " + (r+1));
             out.println();
