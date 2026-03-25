@@ -1,5 +1,7 @@
 package client;
 
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,10 +14,12 @@ import exception.ResponseException;
 //import webSocketMessages.Notification;
 
 import static ui.EscapeSequences.*;
+import static ui.EscapeSequences.BLACK_KING;
 
 import model.GameData;
 import request.*;
 import result.*;
+import ui.EscapeSequences;
 
 public class Client {
     private final ServerFacade server;
@@ -36,8 +40,7 @@ public class Client {
     }
 
     public void run() {
-        System.out.println("♕ Welcome to Chess. Sign in to start. ♕");
-        System.out.print(help());
+        System.out.println("♕ Welcome to Chess. Type 'help' to get started. ♕\n");
 
         Scanner scanner = new Scanner(System.in);
         var result = "";
@@ -47,7 +50,7 @@ public class Client {
 
             try {
                 result = eval(line);
-                System.out.print(SET_TEXT_COLOR_GREEN + result);
+                System.out.print(result);
             } catch(Throwable e){
                 var msg = e.toString();
                 System.out.print(msg);
@@ -63,9 +66,9 @@ public class Client {
 
     private void printPrompt() {
         if (state == State.LOGGEDIN) {
-            System.out.print(SET_TEXT_COLOR_BLUE + "\n[" + username + "] >>> ");
+            System.out.print(SET_TEXT_COLOR_BLUE + "\n[LOGGED_IN: " + username + "] >>> " + RESET_TEXT_COLOR);
         } else {
-            System.out.print(SET_TEXT_COLOR_WHITE + "\n[LOGGED_OUT] " + ">>> ");
+            System.out.print("\n[LOGGED_OUT] " + ">>> ");
         }
     }
 
@@ -79,7 +82,8 @@ public class Client {
                     case "register" -> register(params);
                     case "login" -> login(params);
                     case "quit" -> "quit";
-                    default -> help();
+                    case "help" -> help();
+                    default -> "Please enter a valid response. Type 'help' to see your options.";
                 };
             } else {
                 return switch(cmd) {
@@ -89,7 +93,8 @@ public class Client {
                     case "observe" -> observeGame(params);
                     case "logout" -> logout();
                     case "quit" -> "quit";
-                    default -> help();
+                    case "help" -> help();
+                    default -> "Please enter a valid response. Type 'help' to see your options.";
                 };
             }
         } catch (Exception ex) {
@@ -120,7 +125,7 @@ public class Client {
             username = result.username();
             state = State.LOGGEDIN;
 
-            return "Logged in as " + username;
+            return "Logged in as " + username + ". Type 'help' to see further options.";
         }
 
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <username> <password>");
@@ -131,7 +136,7 @@ public class Client {
         if (params.length >= 1) {
             var result = server.createGame(authToken, new CreateRequest(params[0]));
 
-            return "Game created with ID: " + result.gameID();
+            return "New game created.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameName>");
     }
@@ -144,6 +149,9 @@ public class Client {
 
         StringBuilder sb = new StringBuilder();
         int i = 1;
+        if (gameList.isEmpty()){
+            return "No existing games. Type 'create <gameName>' to create a new game.";
+        }
         for (var game : gameList){
             sb.append(i++)
                     .append(". ")
@@ -213,17 +221,21 @@ public class Client {
     public String help() {
         if (state == State.LOGGEDOUT) {
             return """
+                    
                     - register <username> <password> <email>
                     - login <username> <password>
+                    - help
                     - quit
                     """;
         }
         return """
+                
                 - create <gameName>
                 - list
                 - join <gameID> [WHITE|BLACK]
-                - observe <
+                - observe <gameID>
                 - logout
+                - help
                 - quit
                 """;
     }
@@ -235,31 +247,50 @@ public class Client {
     }
 
     private void drawBoard(boolean whitePerspective) {
-        String[] whiteBack = {"R", "N", "B", "Q", "K", "B", "N", "R"};
-        String[] blackBack = {"r", "n", "b", "q", "k", "b", "n", "r"};
+        var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
+        out.print(ERASE_SCREEN);
+        String[] whiteBack = {WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN,
+                WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK};
+        String[] blackBack = {BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN,
+                BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK};
 
         int start = whitePerspective ? 7 : 0;
         int end = whitePerspective ? -1 : 8;
         int step = whitePerspective ? -1 : 1;
 
+        out.println("   a   b   c  d   e  f   g   h");
         for (int r = start; r != end; r += step) {
-            System.out.print((r+1) + " ");
+
+            out.print((r+1) + " ");
 
             for (int c = 0; c<8; c++) {
-                int col = whitePerspective ? c : 7-c;
+                int col = whitePerspective ? c : 7 - c;
 
-                String piece = ".";
+                boolean isLightSquare = (r + col) % 2 != 0;
+                if (isLightSquare) {out.print(SET_BG_COLOR_LIGHT_GREY);}
+                else {out.print(SET_BG_COLOR_DARK_GREEN);}
 
-                if (r==1) piece = "P";
-                if (r==6) piece = "p";
-                if (r==0) piece = whiteBack[col];
-                if (r==7) piece = blackBack[col];
+                String piece = getPiece(r, col, whiteBack, blackBack);
 
-                System.out.print(piece + " ");
+                out.print(piece);
+                resetColors(out);
             }
-            System.out.println();
+            out.print(" " + (r+1));
+            out.println();
         }
 
-        System.out.println("  a b c d e f g h");
+        out.println("   a   b   c  d   e  f   g   h");
+    }
+
+    private void resetColors(PrintStream out) {
+        out.print(RESET_TEXT_COLOR);
+        out.print(RESET_BG_COLOR);
+    }
+    private String getPiece(int r, int col, String[] whiteBack, String[] blackBack) {
+        if (r == 1) return WHITE_PAWN;
+        if (r == 6) return SET_TEXT_COLOR_BLACK + BLACK_PAWN;
+        if (r == 0) return whiteBack[col];
+        if (r == 7) return SET_TEXT_COLOR_BLACK + blackBack[col];
+        return EMPTY;
     }
 }
