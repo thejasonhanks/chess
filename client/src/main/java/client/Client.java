@@ -143,6 +143,7 @@ public class Client {
         gameList = result.games();
 
         StringBuilder sb = new StringBuilder();
+        int i = 1;
         for (var game : gameList){
             sb.append(i++)
                     .append(". ")
@@ -182,7 +183,7 @@ public class Client {
         assertSignedIn();
 
         if (params.length >=1){
-            int index = Integer.parseInt(params[0]) - 1);
+            int index = Integer.parseInt(params[0]) - 1;
 
             if (index < 0 || index >= gameList.size()) {
                 throw new ResponseException(ResponseException.Code.ClientError, "Invalid game number");
@@ -220,7 +221,8 @@ public class Client {
         return """
                 - create <gameName>
                 - list
-                - join <gameID> <WHITE|BLACK>
+                - join <gameID> [WHITE|BLACK]
+                - observe <
                 - logout
                 - quit
                 """;
@@ -230,5 +232,34 @@ public class Client {
         if (state == State.LOGGEDOUT) {
             throw new ResponseException(ResponseException.Code.ClientError, "You must sign in");
         }
+    }
+
+    private void drawBoard(boolean whitePerspective) {
+        String[] whiteBack = {"R", "N", "B", "Q", "K", "B", "N", "R"};
+        String[] blackBack = {"r", "n", "b", "q", "k", "b", "n", "r"};
+
+        int start = whitePerspective ? 7 : 0;
+        int end = whitePerspective ? -1 : 8;
+        int step = whitePerspective ? -1 : 1;
+
+        for (int r = start; r != end; r += step) {
+            System.out.print((r+1) + " ");
+
+            for (int c = 0; c<8; c++) {
+                int col = whitePerspective ? c : 7-c;
+
+                String piece = ".";
+
+                if (r==1) piece = "P";
+                if (r==6) piece = "p";
+                if (r==0) piece = whiteBack[col];
+                if (r==7) piece = blackBack[col];
+
+                System.out.print(piece + " ");
+            }
+            System.out.println();
+        }
+
+        System.out.println("  a b c d e f g h");
     }
 }
