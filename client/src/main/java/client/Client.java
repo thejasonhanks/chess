@@ -1,6 +1,8 @@
 package client;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 import com.google.gson.Gson;
@@ -10,6 +12,8 @@ import exception.ResponseException;
 //import webSocketMessages.Notification;
 
 import static ui.EscapeSequences.*;
+
+import model.GameData;
 import request.*;
 import result.*;
 
@@ -17,6 +21,7 @@ public class Client {
     private final ServerFacade server;
     private String username = null;
     private String authToken = null;
+    private List<GameData> gameList = new ArrayList<>();
     //private final WebSocketFacade ws;
     private State state = State.LOGGEDOUT;
 
@@ -81,6 +86,7 @@ public class Client {
                     case "create" -> createGame(params);
                     case "list" -> listGames();
                     case "join" -> joinGame(params);
+                    //case "observe" -> observeGame(params);
                     case "logout" -> logout();
                     case "quit" -> "quit";
                     default -> help();
@@ -134,12 +140,17 @@ public class Client {
         assertSignedIn();
 
         var result = server.listGames(authToken);
+        gameList = result.games();
 
         StringBuilder sb = new StringBuilder();
-        for (var game : result.games()){
-            sb.append(game.gameID())
-                    .append(": ")
+        for (var game : gameList){
+            sb.append(i++)
+                    .append(". ")
                     .append(game.gameName())
+                    .append(" | White: ")
+                    .append(game.whiteUsername() == null ? "-" : game.whiteUsername())
+                    .append(" | Black: ")
+                    .append(game.blackUsername() == null ? "-" : game.blackUsername())
                     .append("\n");
         }
 
@@ -149,12 +160,20 @@ public class Client {
     public String joinGame(String... params) throws ResponseException {
         assertSignedIn();
         if (params.length >= 2) {
-            int gameID = Integer.parseInt(params[0]);
+            int index = Integer.parseInt(params[0]) - 1;
             String color = params[1].toUpperCase();
+
+            if (index < 0 || index >= gameList.size()) {
+                throw new ResponseException(ResponseException.Code.ClientError, "Invalid game number");
+            }
+
+            int gameID = gameList.get(index).gameID();
 
             server.joinGame(authToken, new JoinRequest(color, gameID));
 
-            return "Joined game " + gameID + " as " + color;
+            drawBoard(color.equals("WHITE"));
+
+            return "Joined game " + index + " as " + color;
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameID> <WHITE|BLACK>");
     }
