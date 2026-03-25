@@ -76,6 +76,8 @@ public class ServerFacadeTests {
 
     @Test
     void logoutNegative() throws Exception {
+        facade.register(new RegisterRequest("user", "password", "email@email.com"));
+
         assertThrows(ResponseException.class, ()->{
             facade.logout("badToken");
         });
