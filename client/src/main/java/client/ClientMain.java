@@ -1,7 +1,6 @@
 package client;
 
 import chess.*;
-import client.websocket.Client;
 
 public class ClientMain {
     public static void main(String[] args) {
