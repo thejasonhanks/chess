@@ -1,8 +1,9 @@
 package client;
 
 import com.google.gson.Gson;
+import result.*;
+import request.*;
 import exception.ResponseException;
-import model.*;
 
 import java.net.*;
 import java.net.http.*;
@@ -15,35 +16,51 @@ public class ServerFacade {
     private final String serverUrl;
 
     public ServerFacade(String url) { serverUrl = url; }
-    public RegisterResult register(RegisterRequest request) {
-        var request = buildRequest("POST", "/pet", request.username);
+
+    public RegisterResult register(RegisterRequest regRequest) throws ResponseException {
+        var request = buildRequest("POST", "/user", regRequest, null);
         var response = sendRequest(request);
-        return handleResponse(response, Pet.class)
-        http work
-                create http request, send to server to call webapi, get back result
-                serialization, deserialization
-                        service methods that mirror the handlers on the server side.
+        return handleResponse(response, RegisterResult.class);
     }
 
-    public LoginResult login(LoginRequest request) {
-        var url = new URL(serverUrl + "/session");
+    public LoginResult login(LoginRequest inRequest) throws ResponseException {
+        var request = buildRequest("POST", "/session", inRequest, null);
+        var response = sendRequest(request);
+        return handleResponse(response, LoginResult.class);
 
     }
 
-    public void logout(String authToken){}
+    public void logout(String authToken) throws ResponseException {
+        var request = buildRequest("DELETE", "/session", null, authToken);
+        sendRequest(request);
+    }
 
-    public CreateResult createGame(String authToken, CreateRequest request)
+    public CreateResult createGame(String authToken, CreateRequest createRequest) throws ResponseException {
+        var request = buildRequest("POST", "/game", createRequest, authToken);
+        var response = sendRequest(request);
+        return handleResponse(response, CreateResult.class);
+    }
 
-    public ListResult listGames(String authToken) {}
+    public ListResult listGames(String authToken) throws ResponseException {
+        var request = buildRequest("GET", "/game", null, authToken);
+        var response = sendRequest(request);
+        return handleResponse(response, ListResult.class);
+    }
 
-    public void joinGame(JoinRequest request) {...}
+    public void joinGame(String authToken, JoinRequest joinRequest) throws ResponseException {
+        var request = buildRequest("PUT", "/game", joinRequest, authToken);
+        sendRequest(request);
+    }
 
-    private HttpRequest buildRequest(String method, String path, Object body) {
+    private HttpRequest buildRequest(String method, String path, Object body, String authToken) {
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(serverUrl + path))
                 .method(method, makeRequestBody(body));
         if (body != null) {
             request.setHeader("Content-Type", "application/json");
+        }
+        if (authToken != null) {
+            request.setHeader("Authorization", authToken);
         }
         return request.build();
     }
@@ -60,13 +77,13 @@ public class ServerFacade {
         try {
             return client.send(request, BodyHandlers.ofString());
         } catch (Exception ex) {
-            throw new ResponseException(ResponseExcepiton.Code.ServerError, ex.getMessage());
+            throw new ResponseException(ResponseException.Code.ServerError, ex.getMessage());
         }
     }
 
     private <T> T handleResponse(HttpResponse<String> response, Class<T> responseClass) throws ResponseException {
         var status = response.statusCode();
-        if (isSuccessful(status)) {
+        if (!isSuccessful(status)) {
             var body = response.body();
             if (body != null) {
                 throw ResponseException.fromJson(body);
@@ -78,5 +95,11 @@ public class ServerFacade {
         if (responseClass != null) {
             return new Gson().fromJson(response.body(), responseClass);
         }
+
+        return null;
+    }
+
+    private boolean isSuccessful(int status) {
+        return status / 100 == 2;
     }
 }
