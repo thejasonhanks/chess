@@ -2,10 +2,8 @@ package client.websocket;
 
 import java.util.Scanner;
 
-import com.google.gson.Gson;
-import model.*;
 import client.websocket.NotificationHandler;
-import server.ServerFacade;
+import client.ServerFacade;
 import client.websocket.WebSocketFacade;
 
 import static client.EscapeSequences.*;
