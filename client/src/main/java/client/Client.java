@@ -268,7 +268,7 @@ public class Client {
 
             out.print((r+1) + " ");
 
-            for (int c = 0; c<8; c++) {
+            for (int c = 0; c < 8; c++) {
                 int col = whitePerspective ? c : 7 - c;
 
                 boolean isLightSquare = (r + col) % 2 != 0;
