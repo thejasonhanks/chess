@@ -18,10 +18,10 @@ public class UserService {
 
     public RegisterResult register(RegisterRequest registerRequest) throws Exception {
         if (registerRequest.username() == null || registerRequest.password() == null){
-            throw new BadRequestException("username or password cannot be null");
+            throw new BadRequestException("Error: username or password cannot be null");
         }
         if (userDAO.getUser(registerRequest.username()) != null){
-            throw new AlreadyTakenException("Username is already taken");
+            throw new AlreadyTakenException("Error: Username is already taken");
         }
 
         String hashedPassword = BCrypt.hashpw(registerRequest.password(), BCrypt.gensalt());
@@ -40,17 +40,17 @@ public class UserService {
 
     public LoginResult login(LoginRequest loginRequest) throws Exception{
         if (loginRequest.username() == null || loginRequest.password() == null){
-            throw new BadRequestException("username or password cannot be null");
+            throw new BadRequestException("Error: username or password cannot be null");
         }
 
         UserData user = userDAO.getUser(loginRequest.username());
         if (user == null){
-            throw new UnauthorizedException("unauthorized");
+            throw new UnauthorizedException("Error: unauthorized");
         }
 
 
         if (!BCrypt.checkpw(loginRequest.password(), user.password())){
-            throw new UnauthorizedException("unauthorized");
+            throw new UnauthorizedException("Error: unauthorized");
         }
 
         String token = authDAO.createAuth(loginRequest.username());
@@ -59,11 +59,11 @@ public class UserService {
 
     public void logout(String authToken) throws Exception{
         if (authToken == null){
-            throw new UnauthorizedException("unauthorized");
+            throw new UnauthorizedException("Error: unauthorized");
         }
         AuthData auth = authDAO.getAuth(authToken);
         if (auth == null){
-            throw new UnauthorizedException("unauthorized");
+            throw new UnauthorizedException("Error: unauthorized");
         }
         authDAO.deleteAuth(authToken);
     }
