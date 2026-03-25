@@ -69,7 +69,7 @@ public class Client {
                 return switch (cmd) {
                     case "register" -> register(params);
                     case "login" -> login(params);
-                    case "quit" -> "quit";
+                    case "quit" -> "Goodbye";
                     case "help" -> help();
                     default -> "Please enter a valid response. Type 'help' to see your options.";
                 };
