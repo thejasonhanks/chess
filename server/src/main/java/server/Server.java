@@ -1,6 +1,5 @@
 package server;
 
-import com.google.gson.Gson;
 import dataaccess.*;
 import handler.ClearHandler;
 import handler.GameHandler;
@@ -13,7 +12,6 @@ import service.UnauthorizedException;
 
 
 public class Server {
-    private final Gson gson = new Gson();
     private final Javalin javalin;
 
     public Server() {
