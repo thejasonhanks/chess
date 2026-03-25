@@ -32,7 +32,8 @@ public class ServerFacade {
 
     public void logout(String authToken) throws ResponseException {
         var request = buildRequest("DELETE", "/session", null, authToken);
-        sendRequest(request);
+        var response = sendRequest(request);
+        handleResponse(response, null);
     }
 
     public CreateResult createGame(String authToken, CreateRequest createRequest) throws ResponseException {
@@ -49,7 +50,8 @@ public class ServerFacade {
 
     public void joinGame(String authToken, JoinRequest joinRequest) throws ResponseException {
         var request = buildRequest("PUT", "/game", joinRequest, authToken);
-        sendRequest(request);
+        var response = sendRequest(request);
+        handleResponse(response, null);
     }
 
     public void clear() throws ResponseException{
@@ -82,7 +84,6 @@ public class ServerFacade {
         try {
             return client.send(request, BodyHandlers.ofString());
         } catch (Exception ex) {
-            ex.printStackTrace();
             throw new ResponseException(ResponseException.Code.ServerError, ex.toString());
         }
     }
@@ -90,10 +91,13 @@ public class ServerFacade {
     private <T> T handleResponse(HttpResponse<String> response, Class<T> responseClass) throws ResponseException {
         var status = response.statusCode();
 
+        System.out.println("STATUS: " + status);
+        System.out.println("BODY: " + response.body());
+
         if (!isSuccessful(status)) {
             var body = response.body();
             if (body != null) {
-                throw ResponseException.fromJson(body);
+                throw ResponseException.fromJson(body, status);
             }
 
             throw new ResponseException(ResponseException.fromHttpStatusCode(status), "other failure: " + status);
@@ -102,7 +106,6 @@ public class ServerFacade {
         if (responseClass != null) {
             return new Gson().fromJson(response.body(), responseClass);
         }
-
         return null;
     }
 
