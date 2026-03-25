@@ -259,7 +259,8 @@ public class Client {
         int end = whitePerspective ? -1 : 8;
         int step = whitePerspective ? -1 : 1;
 
-        out.println("   a   b   c  d   e  f   g   h");
+        if (whitePerspective) {out.println("   a   b   c  d   e  f   g   h");}
+        else {out.println("   h   g   f  e   d  c   b   a");}
         for (int r = start; r != end; r += step) {
 
             out.print((r+1) + " ");
@@ -281,7 +282,8 @@ public class Client {
             out.println();
         }
 
-        out.println("   a   b   c  d   e  f   g   h");
+        if (whitePerspective) {out.println("   a   b   c  d   e  f   g   h");}
+        else {out.println("   h   g   f  e   d  c   b   a");}
     }
 
     private String getPiece(int r, int col, String[] whiteBack, String[] blackBack) {
