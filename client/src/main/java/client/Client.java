@@ -92,7 +92,7 @@ public class Client {
     }
 
     public String register(String... params) throws ResponseException {
-        if (params.length >=3) {
+        if (params.length ==3) {
             var result = server.register(
                     new RegisterRequest(params[0], params[1], params[2])
             );
@@ -123,7 +123,7 @@ public class Client {
 
     public String createGame(String... params) throws ResponseException {
         assertSignedIn();
-        if (params.length >= 1) {
+        if (params.length == 1) {
             server.createGame(authToken, new CreateRequest(params[0]));
 
             return "New game created.";
@@ -159,7 +159,7 @@ public class Client {
     public String joinGame(String... params) throws ResponseException {
         assertSignedIn();
 
-        if (params.length >= 2) {
+        if (params.length == 2) {
             int gameNumber = Integer.parseInt(params[0]);
             String color = params[1].toUpperCase();
 
