@@ -7,26 +7,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
-import com.google.gson.Gson;
 import exception.ResponseException;
-//import client.websocket.NotificationHandler;
-//import client.websocket.WebSocketFacade;
-//import webSocketMessages.Notification;
+
 
 import static ui.EscapeSequences.*;
-import static ui.EscapeSequences.BLACK_KING;
 
 import model.GameData;
 import request.*;
 import result.*;
-import ui.EscapeSequences;
 
 public class Client {
     private final ServerFacade server;
     private String username = null;
     private String authToken = null;
     private List<GameData> gameList = new ArrayList<>();
-    //private final WebSocketFacade ws;
     private State state = State.LOGGEDOUT;
 
     public enum State {
@@ -36,7 +30,6 @@ public class Client {
 
     public Client(String serverUrl) throws Exception {
         server = new ServerFacade(serverUrl);
-        //ws = new WebSocketFacade(serverUrl, this);
     }
 
     public void run() {
@@ -58,11 +51,6 @@ public class Client {
         }
         System.out.println();
     }
-
-//    public void notify(Notification notiication) {
-//        System.out.println(SET_BG_COLOR_RED + notification.message());
-//        printPrompt();
-//    }
 
     private void printPrompt() {
         if (state == State.LOGGEDIN) {
@@ -94,6 +82,7 @@ public class Client {
                     case "logout" -> logout();
                     case "quit" -> "quit";
                     case "help" -> help();
+                    case "clear" -> clear();
                     default -> "Please enter a valid response. Type 'help' to see your options.";
                 };
             }
@@ -101,6 +90,7 @@ public class Client {
             return "Error: " + ex.getMessage();
         }
     }
+
     public String register(String... params) throws ResponseException {
         if (params.length >=3) {
             var result = server.register(
@@ -134,7 +124,7 @@ public class Client {
     public String createGame(String... params) throws ResponseException {
         assertSignedIn();
         if (params.length >= 1) {
-            var result = server.createGame(authToken, new CreateRequest(params[0]));
+            server.createGame(authToken, new CreateRequest(params[0]));
 
             return "New game created.";
         }
@@ -168,9 +158,16 @@ public class Client {
 
     public String joinGame(String... params) throws ResponseException {
         assertSignedIn();
+
         if (params.length >= 2) {
-            int index = Integer.parseInt(params[0]) - 1;
+            int gameNumber = Integer.parseInt(params[0]);
             String color = params[1].toUpperCase();
+
+            if (gameList.isEmpty()) {
+                listGames();
+            }
+
+            int index = gameNumber - 1;
 
             if (index < 0 || index >= gameList.size()) {
                 throw new ResponseException(ResponseException.Code.ClientError, "Invalid game number");
@@ -182,7 +179,7 @@ public class Client {
 
             drawBoard(color.equals("WHITE"));
 
-            return "Joined game " + index + " as " + color;
+            return "Joined game " + gameNumber + " as " + color;
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameID> <WHITE|BLACK>");
     }
@@ -215,13 +212,12 @@ public class Client {
         username = null;
         state = State.LOGGEDOUT;
 
-        return "Logged out";
+        return "Logged out\n♕ Welcome to Chess. Type 'help' to get started. ♕";
     }
 
     public String help() {
         if (state == State.LOGGEDOUT) {
             return """
-                    
                     - register <username> <password> <email>
                     - login <username> <password>
                     - help
@@ -229,7 +225,6 @@ public class Client {
                     """;
         }
         return """
-                
                 - create <gameName>
                 - list
                 - join <gameID> [WHITE|BLACK]
@@ -238,6 +233,12 @@ public class Client {
                 - help
                 - quit
                 """;
+    }
+
+    private String clear() throws ResponseException {
+        server.clear();
+        state = State.LOGGEDOUT;
+        return "Database cleared.";
     }
 
     private void assertSignedIn() throws ResponseException {
@@ -273,7 +274,7 @@ public class Client {
                 String piece = getPiece(r, col, whiteBack, blackBack);
 
                 out.print(piece);
-                resetColors(out);
+                out.print(RESET_BG_COLOR);
             }
             out.print(" " + (r+1));
             out.println();
@@ -282,10 +283,6 @@ public class Client {
         out.println("   a   b   c  d   e  f   g   h");
     }
 
-    private void resetColors(PrintStream out) {
-        out.print(RESET_TEXT_COLOR);
-        out.print(RESET_BG_COLOR);
-    }
     private String getPiece(int r, int col, String[] whiteBack, String[] blackBack) {
         if (r == 1) return WHITE_PAWN;
         if (r == 6) return SET_TEXT_COLOR_BLACK + BLACK_PAWN;
