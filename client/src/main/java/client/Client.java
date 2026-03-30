@@ -170,7 +170,7 @@ public class Client {
             int index = gameNumber - 1;
 
             if (index < 0 || index >= gameList.size()) {
-                throw new ResponseException(ResponseException.Code.ClientError, "Invalid game number");
+                throw new ResponseException(ResponseException.Code.ClientError, "Error: Invalid game number");
             }
 
             int gameID = gameList.get(index).gameID();
@@ -181,7 +181,7 @@ public class Client {
 
             return "Joined game " + gameNumber + " as " + color;
         }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <gameID> <WHITE|BLACK>");
+        throw new ResponseException(ResponseException.Code.ClientError, "Error: Expected: <gameID> <WHITE|BLACK>");
     }
 
     public String observeGame(String... params) throws ResponseException {
