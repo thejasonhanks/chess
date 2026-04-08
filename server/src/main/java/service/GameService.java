@@ -1,5 +1,7 @@
 package service;
 
+import chess.ChessGame;
+import chess.ChessMove;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import model.AuthData;
@@ -79,6 +81,31 @@ public class GameService {
             throw new BadRequestException("Error: bad request");
         }
 
+    }
+
+    public void makeMove(String authToken, int gameID, ChessMove move) throws Exception{
+        AuthData auth = authDAO.getAuth(authToken);
+        if (auth == null) {
+            throw new UnauthorizedException("Error: unauthorized request");
+        }
+
+        GameData gameData = gameDAO.getGame(gameID);
+        if (gameData == null) {
+            throw new BadRequestException("Error: game not found");
+        }
+
+        ChessGame game = gameData.game();
+        game.makeMove(move);
+
+        GameData updated = new GameData(
+                gameID,
+                gameData.whiteUsername(),
+                gameData.blackUsername(),
+                gameData.gameName(),
+                game
+        );
+
+        gameDAO.updateGame(updated);
     }
 
 }
