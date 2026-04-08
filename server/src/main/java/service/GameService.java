@@ -111,6 +111,32 @@ public class GameService {
         gameDAO.updateGame(updated);
     }
 
+    public void leave(String authToken, int gameID) throws Exception {
+        AuthData auth = authDAO.getAuth(authToken);
+        if (auth == null) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+
+        GameData gameData = gameDAO.getGame(gameID);
+        if (gameData == null) {
+            throw new BadRequestException("Error: game not found");
+        }
+
+        String username = auth.username();
+        GameData updated;
+        if (username.equals(gameData.whiteUsername())) {
+            updated = new GameData(gameData.gameID(), null,
+                    gameData.blackUsername(), gameData.gameName(), gameData.game());
+        } else if (username.equals(gameData.blackUsername())) {
+            updated = new GameData(gameData.gameID(), gameData.whiteUsername(),
+                    null, gameData.gameName(), gameData.game());
+        } else {
+            updated = gameData;
+        }
+
+        gameDAO.updateGame(updated);
+    }
+
     public void resign(String authToken, int gameID) throws Exception{
         AuthData auth = authDAO.getAuth(authToken);
         if (auth == null) {
