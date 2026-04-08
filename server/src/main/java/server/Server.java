@@ -52,7 +52,7 @@ public class Server {
         GameHandler gameHandler = new GameHandler(gameDAO, authDAO);
         SessionHandler sessionHandler = new SessionHandler(userDAO, authDAO);
         ClearHandler clearHandler = new ClearHandler(userDAO, authDAO, gameDAO);
-        WebSocketHandler webSocketHandler = new WebSocketHandler();
+        WebSocketHandler webSocketHandler = new WebSocketHandler(authDAO, gameDAO);
 
         javalin.post("/user", userHandler::register);
 
@@ -66,15 +66,9 @@ public class Server {
         javalin.delete("/db", clearHandler::clear);
 
         javalin.ws("/ws", ws -> {
-            ws.onConnect(ctx -> {
-                //store session
-            });
-            ws.onMessage(ctx -> {
-                //parse incoming command
-            });
-            ws.onClose(ctx -> {
-                //cleanup
-            });
+            ws.onConnect(webSocketHandler);
+            ws.onMessage(webSocketHandler);
+            ws.onClose(webSocketHandler);
         });
     }
 

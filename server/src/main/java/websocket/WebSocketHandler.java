@@ -1,66 +1,126 @@
 package websocket;
 
+import dataaccess.AuthDAO;
+import dataaccess.GameDAO;
 import io.javalin.websocket.*;
 import com.google.gson.Gson;
-import exception.ResponseException;
-import org.eclipse.jetty.websocket.api.Session;
-import websocket.commands.UserGameCommand;
-import websocket.messages.ServerMessage.*;
-
-import java.io.IOException;
-
-import java.util.HashMap;
+import model.GameData;
+import org.jetbrains.annotations.NotNull;
+import service.BadRequestException;
+import service.GameService;
+import service.UnauthorizedException;
+import websocket.commands.*;
+import websocket.messages.*;
 
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
 
     private final ConnectionManager connections = new ConnectionManager();
+    private final GameDAO gameDAO;
+    private final AuthDAO authDAO;
+    private final Gson gson = new Gson();
 
-    @Override
-    public void handleClose(WsCloseContext ctx) throws Exception {
-        System.out.println("Websocket closed");
+    public WebSocketHandler(AuthDAO authDAO, GameDAO gameDAO) {
+        this.gameDAO = gameDAO;
+        this.authDAO = authDAO;
     }
 
     @Override
-    public void handleConnect(WsConnectContext ctx) throws Exception {
+    public void handleConnect(WsConnectContext ctx) {
         System.out.println("Websocket connected");
         ctx.enableAutomaticPings();
     }
 
     @Override
-    public void handleMessage(WsMessageContext ctx) throws Exception {
+    public void handleMessage(@NotNull WsMessageContext ctx) {
         try {
-            Action action = new Gson().fromJson(ctx.message(), Action.class);
-            switch (action.type()) {
-                case ENTER -> enter(action.visitorName(), ctx.session);
-                case EXIT -> exit(action.visitorName(), ctx.session);
+            UserGameCommand command = gson.fromJson(ctx.message(), UserGameCommand.class);
+            switch (command.getCommandType()) {
+                case CONNECT -> connect(command, ctx);
+                case MAKE_MOVE -> {
+                    MakeMoveCommand moveCommand = gson.fromJson(ctx.message(), MakeMoveCommand.class);
+                    makeMove(moveCommand, ctx);
+                }
+                case LEAVE -> leave(command, ctx);
+                case RESIGN -> resign(command, ctx);
             }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void enter(String visitorName, Session session) throws IOException {
-        connections.add(session);
-        var message = String.format("%s is in the shop", visitorName);
-        var notification = new Notification(Notification.Type.ARRIVAL, message);
-        connections.broadcast(session, notification);
-    }
-
-    private void exit(String visitorName, Session session) throws IOException {
-        var message = String.format("%s left the shop", visitorName);
-        var notification = new Notification(Notification.Type.DEPARTURE, message);
-        connections.broadcast(session, notification);
-        connections.remove(session);
-    }
-
-    public void makeNoise(String petName, String sound) throws ResponseException {
-        try {
-            var message = String.format("%s says %s", petName, sound);
-            var notification = new Notification(Notification.Type.NOISE, message);
-            connections.broadcast(null, notification);
         } catch (Exception ex) {
-            throw new ResponseException(ResponseException.Code.ServerError, ex.getMessage());
+            var error = new ErrorMessage("Error: " + ex.getMessage());
+            ctx.send(gson.toJson(error));
         }
+    }
+
+    @Override
+    public void handleClose(@NotNull WsCloseContext ctx) {
+        System.out.println("Websocket closed");
+    }
+
+    private void connect(UserGameCommand command, WsMessageContext ctx) throws Exception {
+        String authToken = command.getAuthToken();
+        int gameID = command.getGameID();
+
+        if (authDAO.getAuth(authToken) == null) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+        var gameData = gameDAO.getGame(gameID);
+        if (gameData == null) {
+            throw new BadRequestException("Error: game not found");
+        }
+
+        connections.add(gameID, ctx.session);
+
+        var game = gameData.game();
+        var loadMessage = new LoadGameMessage(game);
+        ctx.send(gson.toJson(loadMessage));
+
+        String username = authDAO.getAuth(authToken).username();
+        String message;
+        if (username.equals(gameData.whiteUsername())) {
+            message = username + " joined the game as white";
+        } else if (username.equals(gameData.blackUsername())) {
+            message = username + " joined the game as black";
+        } else {
+            message = username + " joined the game as an observer";
+        }
+
+        var notification = new NotificationMessage(message);
+        connections.broadcast(gameID, ctx.session, notification);
+    }
+
+    public void makeMove(MakeMoveCommand command, WsMessageContext ctx) throws Exception {
+        GameService gameService = new GameService(gameDAO, authDAO);
+
+        gameService.makeMove(
+                command.getAuthToken(),
+                command.getGameID(),
+                command.getMove()
+        );
+
+        GameData gameData = gameDAO.getGame(command.getGameID());
+
+        var loadMessage = new LoadGameMessage(gameData.game());
+        connections.broadcast(command.getGameID(), null, loadMessage);
+
+        String username = authDAO.getAuth(command.getAuthToken()).username();
+        var notification = new NotificationMessage(username + " made a move");
+        connections.broadcast(command.getGameID(), ctx.session, notification);
+    }
+
+    private void leave(UserGameCommand command, WsMessageContext ctx) throws Exception {
+        GameService gameService = new GameService(gameDAO, authDAO);
+        gameService.leave(command.getAuthToken(), command.getGameID());
+
+        String username = authDAO.getAuth(command.getAuthToken()).username();
+        var notification = new NotificationMessage(username + " left the game");
+        connections.broadcast(command.getGameID(), ctx.session, notification);
+        connections.remove(command.getGameID(), ctx.session);
+    }
+
+    private void resign(UserGameCommand command, WsMessageContext ctx) throws Exception{
+        GameService gameService = new GameService(gameDAO, authDAO);
+        gameService.resign(command.getAuthToken(), command.getGameID());
+
+        String username = authDAO.getAuth(command.getAuthToken()).username();
+        var notification = new NotificationMessage(username + " resigned the game");
+        connections.broadcast(command.getGameID(), null, notification);
     }
 }
-
