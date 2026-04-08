@@ -15,12 +15,21 @@ import static chess.ChessPiece.PieceType.PAWN;
  * signature of the existing methods.
  */
 public class ChessGame {
+    private boolean gameOver = false;
     public TeamColor turn;
     public ChessBoard board;
     public ChessGame() {
         setTeamTurn(TeamColor.WHITE);
         board = new ChessBoard();
         board.resetBoard();
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
     }
 
     /**

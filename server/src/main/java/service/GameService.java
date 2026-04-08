@@ -95,7 +95,47 @@ public class GameService {
         }
 
         ChessGame game = gameData.game();
+        if (game.isGameOver()) {
+            throw new BadRequestException("Error: game is over");
+        }
         game.makeMove(move);
+
+        GameData updated = new GameData(
+                gameID,
+                gameData.whiteUsername(),
+                gameData.blackUsername(),
+                gameData.gameName(),
+                game
+        );
+
+        gameDAO.updateGame(updated);
+    }
+
+    public void resign(String authToken, int gameID) throws Exception{
+        AuthData auth = authDAO.getAuth(authToken);
+        if (auth == null) {
+            throw new UnauthorizedException("Error: unauthorized");
+        }
+
+        GameData gameData = gameDAO.getGame(gameID);
+        if (gameData == null) {
+            throw new BadRequestException("Error: game not found");
+        }
+
+        String username = auth.username();
+        boolean isWhite = username.equals(gameData.whiteUsername());
+        boolean isBlack = username.equals(gameData.blackUsername());
+
+        if (!isWhite && !isBlack) {
+            throw new UnauthorizedException("Error: observer cannot resign");
+        }
+
+        ChessGame game = gameData.game();
+        if (game.isGameOver()) {
+            throw new BadRequestException("Error: game already over");
+        }
+
+        game.setGameOver(true);
 
         GameData updated = new GameData(
                 gameID,
