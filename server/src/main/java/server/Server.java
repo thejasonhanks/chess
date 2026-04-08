@@ -62,6 +62,18 @@ public class Server {
         javalin.put("/game", gameHandler::joinGame);
 
         javalin.delete("/db", clearHandler::clear);
+
+        javalin.ws("/ws", ws -> {
+            ws.onConnect(ctx -> {
+                //store session
+            });
+            ws.onMessage(ctx -> {
+                //parse incoming command
+            });
+            ws.onClose(ctx -> {
+                //cleanup
+            });
+        });
     }
 
     public int run(int desiredPort) {
