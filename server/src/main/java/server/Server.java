@@ -9,6 +9,7 @@ import io.javalin.*;
 import service.AlreadyTakenException;
 import service.BadRequestException;
 import service.UnauthorizedException;
+import websocket.WebSocketHandler;
 
 
 public class Server {
@@ -51,6 +52,7 @@ public class Server {
         GameHandler gameHandler = new GameHandler(gameDAO, authDAO);
         SessionHandler sessionHandler = new SessionHandler(userDAO, authDAO);
         ClearHandler clearHandler = new ClearHandler(userDAO, authDAO, gameDAO);
+        WebSocketHandler webSocketHandler = new WebSocketHandler();
 
         javalin.post("/user", userHandler::register);
 
