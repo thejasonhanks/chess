@@ -44,12 +44,12 @@ public class GameService {
     }
 
     public void joinGame(String authToken, JoinRequest request) throws Exception {
-        if (request.playerColor() == null || request.gameID() <= 0){
+        if (request.playerColor() == null || request.gameID() <= 0) {
             throw new BadRequestException("Error: player color or gameID cannot be null");
         }
 
         AuthData auth = authDAO.getAuth(authToken);
-        if (auth == null){
+        if (auth == null) {
             throw new UnauthorizedException("Error: unauthorized request");
         }
 
@@ -57,31 +57,28 @@ public class GameService {
         GameData updatedGame;
         String white = game.whiteUsername();
         String black = game.blackUsername();
-        if (request.playerColor().equals("WHITE")){
+        if (request.playerColor().equals("WHITE")) {
             if (white != null && !white.equals(auth.username())) {
                 throw new AlreadyTakenException("Error: player color already taken");
             }
             updatedGame = new GameData(request.gameID(), auth.username(),
                     game.blackUsername(), game.gameName(), game.game());
-        }else if (request.playerColor().equals("BLACK")){
-            if (black != null && !black.equals(auth.username())){
+        } else if (request.playerColor().equals("BLACK")) {
+            if (black != null && !black.equals(auth.username())) {
                 throw new AlreadyTakenException("Error: player color already taken");
             }
             updatedGame = new GameData(request.gameID(), game.whiteUsername(),
                     auth.username(), game.gameName(), game.game());
-        } else{
+        } else {
             throw new BadRequestException("Error: player color must be WHITE or BLACK");
         }
 
         try {
             gameDAO.updateGame(updatedGame);
-        } catch(BadRequestException e){
+        } catch (BadRequestException e) {
             throw new BadRequestException("Error: bad request");
         }
 
-    }
-    public GameData getGame(int gameID) throws Exception {
-        return gameDAO.getGame(gameID);
     }
 
 }

@@ -68,12 +68,4 @@ public class UserService {
         }
         authDAO.deleteAuth(authToken);
     }
-
-    public String getUsername(String authToken) throws Exception {
-        AuthData auth = authDAO.getAuth(authToken);
-        if (auth == null){
-            throw new UnauthorizedException("Error: unauthorized");
-        }
-        return auth.username();
-    }
 }
