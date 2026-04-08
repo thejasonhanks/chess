@@ -1,7 +1,9 @@
 package client.websocket;
 
+import websocket.messages.*;
+
 public interface NotificationHandler {
-    void notify(Notification notification);
-    void loadGame(GameData game);
-    void error(Exception e);
+    void notify(NotificationMessage notification);
+    void loadGame(LoadGameMessage game);
+    void error(ErrorMessage e);
 }
