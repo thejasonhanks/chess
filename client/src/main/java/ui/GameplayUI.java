@@ -93,7 +93,7 @@ public class GameplayUI implements NotificationHandler {
                         return;
                     }
                     case "help" -> help();
-                    case "redraw" -> ws.sendConnect(authToken, gameID);
+                    case "redraw" -> redraw();
                     case "highlight" -> {
                         ChessPosition pos = parsePosition(tokens[1]);
                         highlightMoves(pos);
@@ -177,8 +177,9 @@ public class GameplayUI implements NotificationHandler {
             out.println("You have resigned the game.");
         } else if (confirm.equals("n") || confirm.equals("no")) {
             out.println("Resign cancelled.");
+            printPrompt();
         } else {
-            out.println("Please enter yes or no.");
+            out.println("Please enter yes or no: ");
         }
     }
 
@@ -194,6 +195,13 @@ public class GameplayUI implements NotificationHandler {
                   help - print gameplay options
                 """);
         printPrompt();
+    }
+
+    private void redraw() {
+        synchronized (out) {
+            drawBoard(currentGame, whitePerspective, null, null);
+            printPrompt();
+        }
     }
 
     private ChessMove parseMove(String input) {
