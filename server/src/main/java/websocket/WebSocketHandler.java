@@ -110,16 +110,16 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.broadcast(command.getGameID(), ctx.session, notification);
 
         ChessGame.TeamColor nextTurn = game.getTeamTurn();
-        String player = nextTurn == ChessGame.TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
+        String nextPlayer = nextTurn == ChessGame.TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
 
-        if (game.isInCheck(nextTurn)) {
-            connections.broadcast(command.getGameID(), null, new NotificationMessage(player + " is in check"));
-        }
         if (game.isInCheckmate(nextTurn)) {
-            connections.broadcast(command.getGameID(), null, new NotificationMessage(player + " is in checkmate"));
+            connections.broadcast(command.getGameID(), null, new NotificationMessage(nextPlayer + " is in checkmate"));
         }
-        if (game.isInStalemate(nextTurn)) {
-            connections.broadcast(command.getGameID(), null, new NotificationMessage(player + " is in stalemate"));
+        else if (game.isInStalemate(nextTurn)) {
+            connections.broadcast(command.getGameID(), null, new NotificationMessage(nextPlayer + " is in stalemate"));
+        }
+        else if (game.isInCheck(nextTurn)) {
+            connections.broadcast(command.getGameID(), null, new NotificationMessage(nextPlayer + " is in check"));
         }
     }
 

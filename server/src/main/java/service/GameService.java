@@ -2,6 +2,7 @@ package service;
 
 import chess.ChessGame;
 import chess.ChessMove;
+import chess.InvalidMoveException;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import model.AuthData;
@@ -94,7 +95,23 @@ public class GameService {
             throw new BadRequestException("Error: game not found");
         }
 
+        String username = auth.username();
+        boolean isWhite = username.equals(gameData.whiteUsername());
+        boolean isBlack = username.equals(gameData.blackUsername());
+        if (!isWhite && !isBlack){
+            throw new UnauthorizedException("Error: observers cannot make moves");
+        }
+
         ChessGame game = gameData.game();
+        ChessGame.TeamColor turn = game.getTeamTurn();
+
+        if (turn == ChessGame.TeamColor.WHITE && !isWhite) {
+            throw new InvalidMoveException("Error: not your turn");
+        }
+        if (turn == ChessGame.TeamColor.BLACK && !isBlack) {
+            throw new InvalidMoveException("Error: not your turn");
+        }
+
         if (game.isGameOver()) {
             throw new BadRequestException("Error: game is over");
         }
