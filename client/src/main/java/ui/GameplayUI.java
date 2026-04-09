@@ -1,0 +1,167 @@
+package ui;
+
+
+
+import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPiece;
+import chess.ChessPosition;
+import client.websocket.NotificationHandler;
+import client.websocket.WebSocketFacade;
+import websocket.messages.*;
+
+import static chess.ChessGame.TeamColor.WHITE;
+import static ui.EscapeSequences.*;
+
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
+
+public class GameplayUI implements NotificationHandler {
+    private WebSocketFacade ws;
+    private final Scanner scanner;
+    private final PrintStream out;
+    private boolean whitePerspective;
+
+    public GameplayUI(WebSocketFacade ws, boolean whitePerspective, Scanner scanner, PrintStream out) {
+        this.ws = ws;
+        this.whitePerspective = whitePerspective;
+        this.scanner = scanner;
+        this.out = out;
+    }
+
+    public void setWebSocket(WebSocketFacade ws) {
+        this.ws = ws;
+    }
+
+    @Override
+    public void loadGame(LoadGameMessage game) {
+        drawBoard(game.getGame(), whitePerspective);
+    }
+
+    @Override
+    public void notify(NotificationMessage notification) {
+        out.println(SET_TEXT_COLOR_YELLOW + notification.getMessage() + RESET_TEXT_COLOR);
+    }
+
+    public void error(ErrorMessage e) {
+        out.println(SET_TEXT_COLOR_RED + e.getErrorMessage() + RESET_TEXT_COLOR);
+    }
+
+    private void drawBoard(ChessGame game, boolean whitePerspective) {
+        var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
+        out.print(ERASE_SCREEN);
+
+        int start = whitePerspective ? 7 : 0;
+        int end = whitePerspective ? -1 : 8;
+        int step = whitePerspective ? -1 : 1;
+
+        if (whitePerspective) {
+            out.println("   a   b   c  d   e  f   g   h");
+        } else {
+            out.println("   h   g   f  e   d  c   b   a");
+        }
+        for (int r = start; r != end; r += step) {
+
+            out.print((r + 1) + " ");
+
+            for (int c = 0; c < 8; c++) {
+                int col = whitePerspective ? c : 7 - c;
+
+                boolean isLightSquare = (r + col) % 2 != 0;
+                out.print(isLightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREEN);
+
+                ChessPosition pos = new ChessPosition(r + 1, col + 1);
+                ChessPiece piece = game.getBoard().getPiece(pos);
+
+                out.print(getPieceString(piece));
+                out.print(RESET_BG_COLOR);
+                out.print(RESET_TEXT_COLOR);
+            }
+            out.print(" " + (r + 1));
+            out.println();
+        }
+
+        if (whitePerspective) {
+            out.println("   a   b   c  d   e  f   g   h");
+        } else {
+            out.println("   h   g   f  e   d  c   b   a");
+        }
+    }
+
+    private String getPieceString(ChessPiece piece) {
+        if (piece == null) {
+            return EMPTY;
+        }
+        return switch (piece.getPieceType()) {
+            case KING -> piece.getTeamColor() == WHITE ? WHITE_KING : BLACK_KING;
+            case QUEEN -> piece.getTeamColor() == WHITE ? WHITE_QUEEN : BLACK_QUEEN;
+            case BISHOP -> piece.getTeamColor() == WHITE ? WHITE_BISHOP : BLACK_BISHOP;
+            case KNIGHT -> piece.getTeamColor() == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT;
+            case ROOK -> piece.getTeamColor() == WHITE ? WHITE_ROOK : BLACK_ROOK;
+            case PAWN -> piece.getTeamColor() == WHITE ? WHITE_PAWN : BLACK_PAWN;
+        };
+    }
+
+    public void runGameplayLoop(String authToken, int gameID) {
+        while (true) {
+            out.print(SET_TEXT_COLOR_BLUE + "[GAMEPLAY] >>> " + RESET_TEXT_COLOR);
+            String line = scanner.nextLine();
+            String[] tokens = line.split(" ");
+            String command = tokens[0].toLowerCase();
+
+            try {
+                switch (command) {
+                    case "move" -> {
+                        ChessMove move = parseMove(tokens[1]);
+                        ws.sendMakeMove(authToken, gameID, move);
+                    }
+                    case "resign" -> ws.sendResign(authToken, gameID);
+                    case "leave" -> {
+                        ws.sendLeave(authToken, gameID);
+                        return;
+                    }
+                    case "help" -> help();
+                    case "redraw" -> ws.sendConnect(authToken, gameID);
+                    default -> out.println("Please enter a valid response. Type 'help' to see your options.");
+                }
+            } catch (Exception e) {
+                out.println(SET_TEXT_COLOR_RED + e.getMessage() + RESET_TEXT_COLOR);
+            }
+        }
+    }
+
+    private void help() {
+        out.println("Gameplay commands:");
+        out.println("- move <from><to> <promotion piece(if applicable)> (e.g., e2e4)");
+        out.println("- resign");
+        out.println("- leave");
+        out.println("- redraw");
+        out.println("- help");
+    }
+
+    private ChessMove parseMove(String input) {
+        ChessPiece.PieceType promotionPiece = null;
+        if (input.length() < 4 || input.length() > 5) {
+            throw new IllegalArgumentException("Invalid move format. Correct examples: e2e4, e2e4q");
+        }
+
+        int startCol = input.charAt(0) - 'a' + 1;
+        int startRow = input.charAt(1) - '0';
+        int endCol = input.charAt(2) - 'a' + 1;
+        int endRow = input.charAt(3) - '0';
+        if (input.length() == 5) {
+            char promotion = input.charAt(4);
+            switch(promotion) {
+                case 'q' -> promotionPiece = ChessPiece.PieceType.QUEEN;
+                case 'r' -> promotionPiece = ChessPiece.PieceType.ROOK;
+                case 'b' -> promotionPiece = ChessPiece.PieceType.BISHOP;
+                case 'n' -> promotionPiece = ChessPiece.PieceType.KNIGHT;
+            }
+        }
+
+        ChessPosition start = new ChessPosition(startRow, startCol);
+        ChessPosition end = new ChessPosition(endRow, endCol);
+        return new ChessMove(start, end, promotionPiece);
+    }
+}

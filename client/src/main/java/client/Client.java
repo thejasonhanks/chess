@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+import client.websocket.WebSocketFacade;
 import exception.ResponseException;
 
 
@@ -15,6 +16,7 @@ import static ui.EscapeSequences.*;
 import model.GameData;
 import request.*;
 import result.*;
+import ui.GameplayUI;
 
 public class Client {
     private final ServerFacade server;
@@ -176,10 +178,19 @@ public class Client {
             int gameID = gameList.get(index).gameID();
 
             server.joinGame(authToken, new JoinRequest(color, gameID));
+            boolean whitePerspective = color.equals("WHITE");
 
-            drawBoard(color.equals("WHITE"));
+            try{
+                var gameplayUI = new GameplayUI(null, whitePerspective, new Scanner(System.in), System.out);
+                var ws = new WebSocketFacade(server.getServerUrl(), gameplayUI);
+                gameplayUI.setWebSocket(ws);
+                ws.sendConnect(authToken, gameID);
+                gameplayUI.runGameplayLoop(authToken, gameID);
+            } catch(Exception e) {
+                throw new ResponseException(ResponseException.Code.ServerError, e.getMessage());
+            }
 
-            return "Joined game " + gameNumber + " as " + color;
+            return "Returned to menu\n";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Error: Expected: <gameID> <WHITE|BLACK>");
     }
@@ -188,18 +199,25 @@ public class Client {
         assertSignedIn();
 
         if (params.length == 1){
-            try {
-                int index = Integer.parseInt(params[0]) - 1;
-                if (index < 0 || index >= gameList.size()) {
-                    throw new ResponseException(ResponseException.Code.ClientError, "Error: Invalid game number");
-                }
-
-                drawBoard(true);
-
-                return "Observing game" + index;
-            } catch(Throwable ex){
+            int index = Integer.parseInt(params[0]) - 1;
+            if (index < 0 || index >= gameList.size()) {
                 throw new ResponseException(ResponseException.Code.ClientError, "Error: Invalid game number");
             }
+
+            int gameID = gameList.get(index).gameID();
+            try {
+                boolean whitePerspective = true;
+
+                var gameplayUI = new GameplayUI(null, whitePerspective, new Scanner(System.in), System.out);
+                var ws = new WebSocketFacade(server.getServerUrl(), gameplayUI);
+                gameplayUI.setWebSocket(ws);
+                ws.sendConnect(authToken, gameID);
+                gameplayUI.runGameplayLoop(authToken, gameID);
+            } catch(Exception e) {
+                throw new ResponseException(ResponseException.Code.ServerError, e.getMessage());
+            }
+
+            return "Returned to menu\n";
         }
 
         throw new ResponseException(ResponseException.Code.ClientError, "Error: Expected <number>");
@@ -248,60 +266,5 @@ public class Client {
         if (state == State.LOGGEDOUT) {
             throw new ResponseException(ResponseException.Code.ClientError, "You must sign in");
         }
-    }
-
-    private void drawBoard(boolean whitePerspective) {
-        var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
-        out.print(ERASE_SCREEN);
-        String[] whiteBack = {WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN,
-                WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK};
-        String[] blackBack = {BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN,
-                BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK};
-
-        int start = whitePerspective ? 7 : 0;
-        int end = whitePerspective ? -1 : 8;
-        int step = whitePerspective ? -1 : 1;
-
-        if (whitePerspective) {out.println("   a   b   c  d   e  f   g   h");}
-        else {out.println("   h   g   f  e   d  c   b   a");}
-        for (int r = start; r != end; r += step) {
-
-            out.print((r+1) + " ");
-
-            for (int c = 0; c < 8; c++) {
-                int col = whitePerspective ? c : 7 - c;
-
-                boolean isLightSquare = (r + col) % 2 != 0;
-                if (isLightSquare) {out.print(SET_BG_COLOR_LIGHT_GREY);}
-                else {out.print(SET_BG_COLOR_DARK_GREEN);}
-
-                String piece = getPiece(r, col, whiteBack, blackBack);
-
-                out.print(piece);
-                out.print(RESET_BG_COLOR);
-                out.print(RESET_TEXT_COLOR);
-            }
-            out.print(" " + (r+1));
-            out.println();
-        }
-
-        if (whitePerspective) {out.println("   a   b   c  d   e  f   g   h");}
-        else {out.println("   h   g   f  e   d  c   b   a");}
-    }
-
-    private String getPiece(int r, int col, String[] whiteBack, String[] blackBack) {
-        if (r == 1) {
-            return WHITE_PAWN;
-        }
-        if (r == 6) {
-            return SET_TEXT_COLOR_BLACK + BLACK_PAWN;
-        }
-        if (r == 0) {
-            return whiteBack[col];
-        }
-        if (r == 7) {
-            return SET_TEXT_COLOR_BLACK + blackBack[col];
-        }
-        return EMPTY;
     }
 }
