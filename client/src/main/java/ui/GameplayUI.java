@@ -38,20 +38,75 @@ public class GameplayUI implements NotificationHandler {
         this.ws = ws;
     }
 
-    @Override
-    public void loadGame(LoadGameMessage game) {
-        System.out.println("DEBUG: loadGame received");
-        this.currentGame = game.getGame();
-        drawBoard(currentGame, whitePerspective, null, null);
+    private volatile boolean promptPrinted = false;
+    private void printPrompt(){
+        out.print(SET_TEXT_COLOR_BLUE + "[GAMEPLAY] >>> " + RESET_TEXT_COLOR);
+        promptPrinted = true;
     }
 
     @Override
     public void notify(NotificationMessage notification) {
-        out.println(SET_TEXT_COLOR_YELLOW + notification.getMessage() + RESET_TEXT_COLOR);
+        synchronized (out) {
+            if (promptPrinted) out.println();
+            out.println(SET_TEXT_COLOR_YELLOW + notification.getMessage() + RESET_TEXT_COLOR);
+            printPrompt();
+        }
     }
 
     public void error(ErrorMessage e) {
-        out.println(SET_TEXT_COLOR_RED + e.getErrorMessage() + RESET_TEXT_COLOR);
+        synchronized (out) {
+            out.println(SET_TEXT_COLOR_RED + e.getErrorMessage() + RESET_TEXT_COLOR);
+            printPrompt();
+        }
+    }
+
+    @Override
+    public void loadGame(LoadGameMessage game) {
+        this.currentGame = game.getGame();
+        synchronized(out) {
+            if (promptPrinted) out.println();
+            drawBoard(currentGame, whitePerspective, null, null);
+            printPrompt();
+        }
+    }
+
+    public void runGameplayLoop(String authToken, int gameID) {
+        while (true) {
+            String line = scanner.nextLine();
+            promptPrinted = false;
+            String[] tokens = line.split(" ");
+            String command = tokens[0].toLowerCase();
+
+            try {
+                switch (command) {
+                    case "move" -> {
+                        ChessMove move = parseMove(tokens[1]);
+                        ws.sendMakeMove(authToken, gameID, move);
+                    }
+                    case "resign" -> {
+                        out.print("Are you sure you want to resign? (y/n): ");
+                        String confirm = scanner.nextLine().trim().toLowerCase();
+                        confirmResign(confirm, authToken, gameID);
+                    }
+                    case "leave" -> {
+                        ws.sendLeave(authToken, gameID);
+                        return;
+                    }
+                    case "help" -> help();
+                    case "redraw" -> ws.sendConnect(authToken, gameID);
+                    case "highlight" -> {
+                        ChessPosition pos = parsePosition(tokens[1]);
+                        highlightMoves(pos);
+                    }
+                    default -> {
+                        out.println("Please enter a valid response. Type 'help' to see your options.");
+                        printPrompt();
+                    }
+                }
+            } catch (Exception e) {
+                out.println(SET_TEXT_COLOR_RED + e.getMessage() + RESET_TEXT_COLOR);
+            }
+        }
     }
 
     private void drawBoard(ChessGame game, boolean whitePerspective, Set<ChessPosition> highlights, ChessPosition currentPos) {
@@ -116,43 +171,6 @@ public class GameplayUI implements NotificationHandler {
         };
     }
 
-    public void runGameplayLoop(String authToken, int gameID) {
-        while (true) {
-            help();
-            out.print(SET_TEXT_COLOR_BLUE + "[GAMEPLAY] >>> " + RESET_TEXT_COLOR);
-            String line = scanner.nextLine();
-            String[] tokens = line.split(" ");
-            String command = tokens[0].toLowerCase();
-
-            try {
-                switch (command) {
-                    case "move" -> {
-                        ChessMove move = parseMove(tokens[1]);
-                        ws.sendMakeMove(authToken, gameID, move);
-                    }
-                    case "resign" -> {
-                        out.print("Are you sure you want to resign? (y/n): ");
-                        String confirm = scanner.nextLine().trim().toLowerCase();
-                        confirmResign(confirm, authToken, gameID);
-                    }
-                    case "leave" -> {
-                        ws.sendLeave(authToken, gameID);
-                        return;
-                    }
-                    case "help" -> help();
-                    case "redraw" -> ws.sendConnect(authToken, gameID);
-                    case "highlight" -> {
-                        ChessPosition pos = parsePosition(tokens[1]);
-                        highlightMoves(pos);
-                    }
-                    default -> out.println("Please enter a valid response. Type 'help' to see your options.");
-                }
-            } catch (Exception e) {
-                out.println(SET_TEXT_COLOR_RED + e.getMessage() + RESET_TEXT_COLOR);
-            }
-        }
-    }
-
     private void confirmResign (String confirm, String authToken, int gameID) throws Exception{
         if (confirm.equals("y") || confirm.equals("yes")) {
             ws.sendResign(authToken, gameID);
@@ -175,6 +193,7 @@ public class GameplayUI implements NotificationHandler {
                   redraw - redraw chess board
                   help - print gameplay options
                 """);
+        printPrompt();
     }
 
     private ChessMove parseMove(String input) {
@@ -203,6 +222,7 @@ public class GameplayUI implements NotificationHandler {
     }
 
     private ChessPosition parsePosition(String input) {
+        System.out.println("DEBUG highlight pos: " + input);
         int col = input.charAt(0) - 'a' + 1;
         int row = input.charAt(1) + '0';
         return new ChessPosition(row, col);
