@@ -17,6 +17,10 @@ public class ServerFacade {
 
     public ServerFacade(String url) { serverUrl = url; }
 
+    public String getServerUrl(){
+        return serverUrl;
+    }
+
     public RegisterResult register(RegisterRequest regRequest) throws ResponseException {
         var request = buildRequest("POST", "/user", regRequest, null);
         var response = sendRequest(request);
