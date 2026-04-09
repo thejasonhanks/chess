@@ -133,15 +133,7 @@ public class GameplayUI implements NotificationHandler {
                     case "resign" -> {
                         out.print("Are you sure you want to resign? (y/n): ");
                         String confirm = scanner.nextLine().trim().toLowerCase();
-                        if (confirm.equals("y") || confirm.equals("yes")) {
-                            ws.sendResign(authToken, gameID);
-                            out.println("You have resigned the game.");
-                            return;
-                        } else if (confirm.equals("n") || confirm.equals("no")) {
-                            out.println("Resign cancelled.");
-                        } else {
-                            out.println("Please enter yes or no.");
-                        }
+                        confirmResign(confirm, authToken, gameID);
                     }
                     case "leave" -> {
                         ws.sendLeave(authToken, gameID);
@@ -158,6 +150,17 @@ public class GameplayUI implements NotificationHandler {
             } catch (Exception e) {
                 out.println(SET_TEXT_COLOR_RED + e.getMessage() + RESET_TEXT_COLOR);
             }
+        }
+    }
+
+    private void confirmResign (String confirm, String authToken, int gameID) throws Exception{
+        if (confirm.equals("y") || confirm.equals("yes")) {
+            ws.sendResign(authToken, gameID);
+            out.println("You have resigned the game.");
+        } else if (confirm.equals("n") || confirm.equals("no")) {
+            out.println("Resign cancelled.");
+        } else {
+            out.println("Please enter yes or no.");
         }
     }
 
