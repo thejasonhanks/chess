@@ -1,5 +1,7 @@
 package websocket;
 
+import chess.ChessGame;
+import chess.ChessPosition;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import io.javalin.websocket.*;
@@ -41,7 +43,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     makeMove(moveCommand, ctx);
                 }
                 case LEAVE -> leave(command, ctx);
-                case RESIGN -> resign(command, ctx);
+                case RESIGN -> resign(command);
             }
         } catch (Exception ex) {
             var error = new ErrorMessage("Error: " + ex.getMessage());
@@ -96,13 +98,29 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         );
 
         GameData gameData = gameDAO.getGame(command.getGameID());
+        ChessGame game = gameData.game();
 
-        var loadMessage = new LoadGameMessage(gameData.game());
+        var loadMessage = new LoadGameMessage(game);
         connections.broadcast(command.getGameID(), null, loadMessage);
 
         String username = authDAO.getAuth(command.getAuthToken()).username();
-        var notification = new NotificationMessage(username + " made a move");
+        var notification = new NotificationMessage(username + " moved from " +
+                positionToString(command.getMove().getStartPosition()) + " to " +
+                positionToString(command.getMove().getEndPosition()));
         connections.broadcast(command.getGameID(), ctx.session, notification);
+
+        ChessGame.TeamColor nextTurn = game.getTeamTurn();
+        String player = nextTurn == ChessGame.TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
+
+        if (game.isInCheck(nextTurn)) {
+            connections.broadcast(command.getGameID(), null, new NotificationMessage(player + " is in check"));
+        }
+        if (game.isInCheckmate(nextTurn)) {
+            connections.broadcast(command.getGameID(), null, new NotificationMessage(player + " is in checkmate"));
+        }
+        if (game.isInStalemate(nextTurn)) {
+            connections.broadcast(command.getGameID(), null, new NotificationMessage(player + " is in stalemate"));
+        }
     }
 
     private void leave(UserGameCommand command, WsMessageContext ctx) throws Exception {
@@ -115,12 +133,18 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.remove(command.getGameID(), ctx.session);
     }
 
-    private void resign(UserGameCommand command, WsMessageContext ctx) throws Exception{
+    private void resign(UserGameCommand command) throws Exception{
         GameService gameService = new GameService(gameDAO, authDAO);
         gameService.resign(command.getAuthToken(), command.getGameID());
 
         String username = authDAO.getAuth(command.getAuthToken()).username();
         var notification = new NotificationMessage(username + " resigned the game");
         connections.broadcast(command.getGameID(), null, notification);
+    }
+
+    private String positionToString(ChessPosition pos) {
+        char col = (char) ('a' + pos.getColumn() - 1);
+        int row = pos.getRow();
+        return "" + col + row;
     }
 }
