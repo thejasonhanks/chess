@@ -14,7 +14,7 @@ import java.net.URISyntaxException;
 
 @ClientEndpoint
 public class WebSocketFacade extends Endpoint {
-    private Session session;
+    private final Session session;
     private final NotificationHandler notificationHandler;
     private final Gson gson = new Gson();
 

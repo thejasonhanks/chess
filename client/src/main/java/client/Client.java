@@ -188,7 +188,7 @@ public class Client {
                 throw new ResponseException(ResponseException.Code.ServerError, e.getMessage());
             }
 
-            return "Returned to menu\n";
+            return "Returned to menu. Type 'help' to see options.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Error: Expected: <gameID> <WHITE|BLACK>");
     }

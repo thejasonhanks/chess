@@ -105,6 +105,10 @@ public class GameService {
         ChessGame game = gameData.game();
         ChessGame.TeamColor turn = game.getTeamTurn();
 
+        if (game.isGameOver()) {
+            throw new BadRequestException("Error: game is over");
+        }
+
         if (turn == ChessGame.TeamColor.WHITE && !isWhite) {
             throw new InvalidMoveException("Error: not your turn");
         }
@@ -112,9 +116,6 @@ public class GameService {
             throw new InvalidMoveException("Error: not your turn");
         }
 
-        if (game.isGameOver()) {
-            throw new BadRequestException("Error: game is over");
-        }
         game.makeMove(move);
 
         GameData updated = new GameData(
