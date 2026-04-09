@@ -1,7 +1,5 @@
 package client;
 
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +33,7 @@ public class Client {
     }
 
     public void run() {
-        System.out.println("♕ Welcome to Chess. Type 'help' to get started. ♕\n");
+        System.out.println("♕ Welcome to Chess. Type 'help' to get started. ♕");
 
         Scanner scanner = new Scanner(System.in);
         var result = "";
@@ -103,7 +101,7 @@ public class Client {
             username = result.username();
             state = State.LOGGEDIN;
 
-            return "Registered and logged in as " + username;
+            return "Registered and logged in as " + username + ". Type 'help' to see further options.";
         }
 
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <username> <password> <email>");
@@ -184,6 +182,7 @@ public class Client {
                 var gameplayUI = new GameplayUI(null, whitePerspective, new Scanner(System.in), System.out);
                 var ws = new WebSocketFacade(server.getServerUrl(), gameplayUI);
                 gameplayUI.setWebSocket(ws);
+                System.out.println("DEBUG: is this before websocket open?");
                 ws.sendConnect(authToken, gameID);
                 gameplayUI.runGameplayLoop(authToken, gameID);
             } catch(Exception e) {
@@ -239,20 +238,22 @@ public class Client {
     public String help() {
         if (state == State.LOGGEDOUT) {
             return """
-                    - register <username> <password> <email>
-                    - login <username> <password>
-                    - help
-                    - quit
+                    Options:
+                      register <username> <password> <email> - register a new user
+                      login <username> <password> - login an existing user
+                      help - print command options
+                      quit - exit server
                     """;
         }
         return """
-                - create <gameName>
-                - list
-                - join <gameID> [WHITE|BLACK]
-                - observe <gameID>
-                - logout
-                - help
-                - quit
+                Options:
+                  create <gameName> - create new chess game
+                  list - list existing chess games
+                  join <gameID> [WHITE|BLACK] - join existing chess game as either white or black
+                  observe <gameID> - watch existing chess game
+                  logout - logout current user
+                  help - print command options
+                  quit - exit server
                 """;
     }
 

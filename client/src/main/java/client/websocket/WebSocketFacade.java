@@ -38,7 +38,6 @@ public class WebSocketFacade extends Endpoint {
     private void handleMessage(String message) {
         try {
             ServerMessage base = gson.fromJson(message, ServerMessage.class);
-
             switch (base.getServerMessageType()) {
                 case LOAD_GAME -> notificationHandler.loadGame(gson.fromJson(message, LoadGameMessage.class));
                 case NOTIFICATION -> notificationHandler.notify(gson.fromJson(message, NotificationMessage.class));
@@ -49,7 +48,7 @@ public class WebSocketFacade extends Endpoint {
         }
     }
 
-    public void sendConnect(String authToken, int gameID) throws IOException {
+    public void sendConnect(String authToken, int gameID) throws Exception {
         UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID);
         send(command);
     }

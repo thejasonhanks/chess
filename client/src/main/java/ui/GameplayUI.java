@@ -40,6 +40,7 @@ public class GameplayUI implements NotificationHandler {
 
     @Override
     public void loadGame(LoadGameMessage game) {
+        System.out.println("DEBUG: loadGame received");
         this.currentGame = game.getGame();
         drawBoard(currentGame, whitePerspective, null, null);
     }
@@ -117,6 +118,7 @@ public class GameplayUI implements NotificationHandler {
 
     public void runGameplayLoop(String authToken, int gameID) {
         while (true) {
+            help();
             out.print(SET_TEXT_COLOR_BLUE + "[GAMEPLAY] >>> " + RESET_TEXT_COLOR);
             String line = scanner.nextLine();
             String[] tokens = line.split(" ");
@@ -128,7 +130,19 @@ public class GameplayUI implements NotificationHandler {
                         ChessMove move = parseMove(tokens[1]);
                         ws.sendMakeMove(authToken, gameID, move);
                     }
-                    case "resign" -> ws.sendResign(authToken, gameID);
+                    case "resign" -> {
+                        out.print("Are you sure you want to resign? (y/n): ");
+                        String confirm = scanner.nextLine().trim().toLowerCase();
+                        if (confirm.equals("y") || confirm.equals("yes")) {
+                            ws.sendResign(authToken, gameID);
+                            out.println("You have resigned the game.");
+                            return;
+                        } else if (confirm.equals("n") || confirm.equals("no")) {
+                            out.println("Resign cancelled.");
+                        } else {
+                            out.println("Please enter yes or no.");
+                        }
+                    }
                     case "leave" -> {
                         ws.sendLeave(authToken, gameID);
                         return;
@@ -148,12 +162,16 @@ public class GameplayUI implements NotificationHandler {
     }
 
     private void help() {
-        out.println("Gameplay commands:");
-        out.println("- move <from><to> <promotion piece(if applicable)> (e.g., e2e4)");
-        out.println("- resign");
-        out.println("- leave");
-        out.println("- redraw");
-        out.println("- help");
+        out.println("""
+                Gameplay options:
+                  move <from><to><promotion piece> - make a chess move. if applicable, enter the promotion piece
+                    as follows: q - queen, r - rook, b - bishop, n - knight. example of valid inputs: e2e4, e2e4q
+                  highlight <piece position> - highlight legal moves. example of valid input: e4
+                  resign - forfeit the game
+                  leave - exit game
+                  redraw - redraw chess board
+                  help - print gameplay options
+                """);
     }
 
     private ChessMove parseMove(String input) {
