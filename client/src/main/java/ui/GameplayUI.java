@@ -15,13 +15,17 @@ import static ui.EscapeSequences.*;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Scanner;
 
 public class GameplayUI implements NotificationHandler {
     private WebSocketFacade ws;
     private final Scanner scanner;
     private final PrintStream out;
-    private boolean whitePerspective;
+    private final boolean whitePerspective;
+    private ChessGame currentGame;
 
     public GameplayUI(WebSocketFacade ws, boolean whitePerspective, Scanner scanner, PrintStream out) {
         this.ws = ws;
@@ -36,7 +40,8 @@ public class GameplayUI implements NotificationHandler {
 
     @Override
     public void loadGame(LoadGameMessage game) {
-        drawBoard(game.getGame(), whitePerspective);
+        this.currentGame = game.getGame();
+        drawBoard(currentGame, whitePerspective, null, null);
     }
 
     @Override
@@ -48,7 +53,7 @@ public class GameplayUI implements NotificationHandler {
         out.println(SET_TEXT_COLOR_RED + e.getErrorMessage() + RESET_TEXT_COLOR);
     }
 
-    private void drawBoard(ChessGame game, boolean whitePerspective) {
+    private void drawBoard(ChessGame game, boolean whitePerspective, Set<ChessPosition> highlights, ChessPosition currentPos) {
         var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
         out.print(ERASE_SCREEN);
 
@@ -67,11 +72,18 @@ public class GameplayUI implements NotificationHandler {
 
             for (int c = 0; c < 8; c++) {
                 int col = whitePerspective ? c : 7 - c;
-
-                boolean isLightSquare = (r + col) % 2 != 0;
-                out.print(isLightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREEN);
-
                 ChessPosition pos = new ChessPosition(r + 1, col + 1);
+                boolean isHighlighted = highlights != null && highlights.contains(pos);
+
+                if (isHighlighted) {
+                    out.print(SET_BG_COLOR_YELLOW);
+                } else if (pos.equals(currentPos)) {
+                    out.print(SET_BG_COLOR_BLUE);
+                } else {
+                    boolean isLightSquare = (r + col) % 2 != 0;
+                    out.print(isLightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREEN);
+                }
+
                 ChessPiece piece = game.getBoard().getPiece(pos);
 
                 out.print(getPieceString(piece));
@@ -123,6 +135,10 @@ public class GameplayUI implements NotificationHandler {
                     }
                     case "help" -> help();
                     case "redraw" -> ws.sendConnect(authToken, gameID);
+                    case "highlight" -> {
+                        ChessPosition pos = parsePosition(tokens[1]);
+                        highlightMoves(pos);
+                    }
                     default -> out.println("Please enter a valid response. Type 'help' to see your options.");
                 }
             } catch (Exception e) {
@@ -163,5 +179,31 @@ public class GameplayUI implements NotificationHandler {
         ChessPosition start = new ChessPosition(startRow, startCol);
         ChessPosition end = new ChessPosition(endRow, endCol);
         return new ChessMove(start, end, promotionPiece);
+    }
+
+    private ChessPosition parsePosition(String input) {
+        int col = input.charAt(0) - 'a' + 1;
+        int row = input.charAt(1) + '0';
+        return new ChessPosition(row, col);
+    }
+
+    private void highlightMoves(ChessPosition pos) {
+        if (currentGame == null) {
+            System.out.println("No game loaded");
+            return;
+        }
+
+        Collection<ChessMove> moves = currentGame.validMoves(pos);
+        if (moves == null || moves.isEmpty()) {
+            System.out.println("No legal moves for that piece");
+            return;
+        }
+
+        Set<ChessPosition> endPositions = new HashSet<>();
+        for (ChessMove move : moves){
+            endPositions.add(move.getEndPosition());
+        }
+
+        drawBoard(currentGame, whitePerspective, endPositions, pos);
     }
 }
