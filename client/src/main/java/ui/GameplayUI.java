@@ -48,7 +48,7 @@ public class GameplayUI implements NotificationHandler {
     @Override
     public void notify(NotificationMessage notification) {
         synchronized (out) {
-            if (promptPrinted) out.println();
+            if (promptPrinted) {out.println();}
             out.println(SET_TEXT_COLOR_YELLOW + notification.getMessage() + RESET_TEXT_COLOR);
             printPrompt();
         }
@@ -65,7 +65,7 @@ public class GameplayUI implements NotificationHandler {
     public void loadGame(LoadGameMessage game) {
         this.currentGame = game.getGame();
         synchronized(out) {
-            if (promptPrinted) out.println();
+            if (promptPrinted) {out.println();}
             drawBoard(currentGame, whitePerspective, null, null);
             printPrompt();
         }
