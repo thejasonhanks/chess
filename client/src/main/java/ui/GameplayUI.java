@@ -107,6 +107,7 @@ public class GameplayUI implements NotificationHandler {
                 }
             } catch (Exception e) {
                 out.println(SET_TEXT_COLOR_RED + e.getMessage() + RESET_TEXT_COLOR);
+                printPrompt();
             }
         }
     }
@@ -220,13 +221,23 @@ public class GameplayUI implements NotificationHandler {
     private ChessMove parseMove(String input) {
         ChessPiece.PieceType promotionPiece = null;
         if (input.length() < 4 || input.length() > 5) {
-            throw new IllegalArgumentException("Invalid move format. Correct examples: e2e4, e2e4q");
+            throw new IllegalArgumentException("Error: Invalid move format. Correct examples: e2e4, e2e4q");
         }
 
         int startCol = input.charAt(0) - 'a' + 1;
         int startRow = input.charAt(1) - '0';
         int endCol = input.charAt(2) - 'a' + 1;
         int endRow = input.charAt(3) - '0';
+
+        if (!Character.isLetter(input.charAt(0)) || !Character.isLetter(input.charAt(2))
+                || !Character.isDigit(input.charAt(1)) || !Character.isDigit(input.charAt(3))){
+            throw new IllegalArgumentException("Error: Invalid move format. Correct examples: e2e4, e2e4q");
+        }else if (input.charAt(0) < 'a' || input.charAt(0) > 'h' ||
+                input.charAt(2) < 'a' || input.charAt(2) > 'h' ||
+                input.charAt(1) < '1' || input.charAt(1) > '8' ||
+                input.charAt(3) < '1' || input.charAt(3) > '8'){
+            throw new IllegalArgumentException("Error: Invalid move format. Correct examples: e2e4, e2e4q");
+        }
         if (input.length() == 5) {
             char promotion = input.charAt(4);
             switch(promotion) {
@@ -236,7 +247,6 @@ public class GameplayUI implements NotificationHandler {
                 case 'n' -> promotionPiece = ChessPiece.PieceType.KNIGHT;
             }
         }
-
         ChessPosition start = new ChessPosition(startRow, startCol);
         ChessPosition end = new ChessPosition(endRow, endCol);
         return new ChessMove(start, end, promotionPiece);
