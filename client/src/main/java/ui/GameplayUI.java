@@ -10,6 +10,7 @@ import client.websocket.NotificationHandler;
 import client.websocket.WebSocketFacade;
 import websocket.messages.*;
 
+import static chess.ChessGame.TeamColor.BLACK;
 import static chess.ChessGame.TeamColor.WHITE;
 import static ui.EscapeSequences.*;
 
@@ -97,6 +98,7 @@ public class GameplayUI implements NotificationHandler {
                     case "highlight" -> {
                         ChessPosition pos = parsePosition(tokens[1]);
                         highlightMoves(pos);
+                        printPrompt();
                     }
                     default -> {
                         out.println("Please enter a valid response. Type 'help' to see your options.");
@@ -130,19 +132,33 @@ public class GameplayUI implements NotificationHandler {
                 int col = whitePerspective ? c : 7 - c;
                 ChessPosition pos = new ChessPosition(r + 1, col + 1);
                 boolean isHighlighted = highlights != null && highlights.contains(pos);
+                boolean isLightSquare = (r + col) % 2 != 0;
 
                 if (isHighlighted) {
-                    out.print(SET_BG_COLOR_YELLOW);
+                    if (isLightSquare){
+                        out.print(SET_BG_COLOR_GREEN);
+                    }else {
+                        out.print(SET_BG_COLOR_DARK_GREEN);
+                    }
                 } else if (pos.equals(currentPos)) {
-                    out.print(SET_BG_COLOR_BLUE);
+                    out.print(SET_TEXT_COLOR_BLACK);
+                    out.print(SET_BG_COLOR_YELLOW);
                 } else {
-                    boolean isLightSquare = (r + col) % 2 != 0;
-                    out.print(isLightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREEN);
+                    out.print(isLightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_BLACK);
                 }
 
                 ChessPiece piece = game.getBoard().getPiece(pos);
 
-                out.print(getPieceString(piece));
+                if (piece == null){
+                    out.print(EMPTY);
+                }
+                else if (piece.getTeamColor() == WHITE){
+                    out.print(SET_TEXT_COLOR_BLUE);
+                    out.print(getPieceString(piece));
+                }else if (piece.getTeamColor() == BLACK){
+                    out.print(SET_TEXT_COLOR_RED);
+                    out.print(getPieceString(piece));
+                }
                 out.print(RESET_BG_COLOR);
                 out.print(RESET_TEXT_COLOR);
             }
@@ -158,9 +174,6 @@ public class GameplayUI implements NotificationHandler {
     }
 
     private String getPieceString(ChessPiece piece) {
-        if (piece == null) {
-            return EMPTY;
-        }
         return switch (piece.getPieceType()) {
             case KING -> piece.getTeamColor() == WHITE ? WHITE_KING : BLACK_KING;
             case QUEEN -> piece.getTeamColor() == WHITE ? WHITE_QUEEN : BLACK_QUEEN;
@@ -230,9 +243,8 @@ public class GameplayUI implements NotificationHandler {
     }
 
     private ChessPosition parsePosition(String input) {
-        System.out.println("DEBUG highlight pos: " + input);
         int col = input.charAt(0) - 'a' + 1;
-        int row = input.charAt(1) + '0';
+        int row = input.charAt(1) - '0';
         return new ChessPosition(row, col);
     }
 
