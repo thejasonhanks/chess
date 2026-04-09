@@ -182,7 +182,6 @@ public class Client {
                 var gameplayUI = new GameplayUI(null, whitePerspective, new Scanner(System.in), System.out);
                 var ws = new WebSocketFacade(server.getServerUrl(), gameplayUI);
                 gameplayUI.setWebSocket(ws);
-                System.out.println("DEBUG: is this before websocket open?");
                 ws.sendConnect(authToken, gameID);
                 gameplayUI.runGameplayLoop(authToken, gameID);
             } catch(Exception e) {

@@ -23,7 +23,13 @@ public class WebSocketFacade extends Endpoint {
         try {
             url = url.replace("http", "ws") + "/ws";
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-            container.connectToServer(this, new URI(url));
+            this.session = container.connectToServer(this, new URI(url));
+            this.session.addMessageHandler(new MessageHandler.Whole<String>() {
+                @Override
+                public void onMessage(String message) {
+                    handleMessage(message);
+                }
+            });
         } catch (DeploymentException | IOException | URISyntaxException ex) {
             throw new ResponseException(ResponseException.Code.ServerError, ex.getMessage());
         }
@@ -31,8 +37,6 @@ public class WebSocketFacade extends Endpoint {
 
     @Override
     public void onOpen(Session session, EndpointConfig endpointConfig) {
-        this.session = session;
-        this.session.addMessageHandler((MessageHandler.Whole<String>) this::handleMessage);
     }
 
     private void handleMessage(String message) {
@@ -53,26 +57,26 @@ public class WebSocketFacade extends Endpoint {
         send(command);
     }
 
-    public void sendMakeMove(String authToken, int gameID, ChessMove move) throws IOException {
+    public void sendMakeMove(String authToken, int gameID, ChessMove move) throws Exception {
         MakeMoveCommand command = new MakeMoveCommand(authToken, gameID, move);
         send(command);
     }
 
-    public void sendLeave(String authToken, int gameID) throws IOException {
+    public void sendLeave(String authToken, int gameID) throws Exception {
         UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
         send(command);
     }
 
-    public void sendResign(String authToken, int gameID) throws IOException {
+    public void sendResign(String authToken, int gameID) throws Exception {
         UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
         send(command);
     }
 
-    private void send(Object command) throws IOException {
-        if (session != null && session.isOpen()) {
+    private void send(Object command) throws Exception {
+        try {
             session.getBasicRemote().sendText(gson.toJson(command));
-        } else {
-            throw new IOException("WebSocket is not open");
+        } catch (IOException ex) {
+            throw new ResponseException(ResponseException.Code.ServerError, ex.getMessage());
         }
     }
 }
